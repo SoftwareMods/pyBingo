@@ -1,7 +1,16 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-
+from helpers import *
+import sys
+stylesheet = """
+    MainWindow {
+        background-image: url("images/background.png"); 
+        background-repeat: no-repeat; 
+        background-position: center;
+    }
+"""
+ball_cell_style = "font-size: 24px; padding: 4px 10px; background-color: white; color: gray; border: 1px solid gray;"
 
 class Color(QWidget):
     def __init__(self, color):
@@ -14,7 +23,6 @@ class Color(QWidget):
         self.setPalette(palette)
 
 
-ball_cell_style = "font-size: 24px; padding: 4px 10px; background-color: white; color: gray; border: 1px solid gray;"
 
 
 class Ball(QPushButton):
@@ -28,9 +36,13 @@ class MainWindow(QMainWindow):
     def __init__(self, projector=None):
         super(MainWindow, self).__init__()
 
+        # Set minimum display size
+        self.setMinimumSize(800, 600)
+
         self.projector = projector
         if projector:
             self.projector = projector
+            self.showHomePage()
         else:
             self.showPlay()
 
@@ -38,53 +50,161 @@ class MainWindow(QMainWindow):
         if self.projector:  # if projector was passed then this one is the main page
             title = "Bingo!"
         self.setWindowTitle(title)
-        self.setMinimumWidth(640)
-        self.setMinimumHeight(480)
 
-        if projector:
-            # If projector was passed then setup start page to begin with
-            home_page = QVBoxLayout()
-            home_page.setContentsMargins(0, 0, 0, 0)
-            home_page.setSpacing(0)
+    def showHomePage(self):
+        self.setStyleSheet(stylesheet)
+        # if projector:
+        # If projector was passed then setup start page to begin with
+        home_page = QVBoxLayout()
+        home_page.setContentsMargins(0, 0, 0, 0)
+        home_page.setSpacing(0)
 
-            bingo_label = QLabel("BINGO")
-            bingo_label.setStyleSheet("font-size: 120px;")
-            bingo_label.setAlignment(Qt.AlignCenter)
-            home_page.addWidget(bingo_label)
+        bingo_label = QLabel("BINGO")
+        bingo_label.setStyleSheet("font-size: 240px;")
+        bingo_label.setAlignment(Qt.AlignCenter)
+        home_page.addWidget(bingo_label)
 
-            button_grid = QGridLayout()
-            button_grid.setContentsMargins(20, 100, 20, 100)
-            button_grid.setSpacing(50)
+        button_grid = QGridLayout()
+        # l, t, r, b
+        button_grid.setContentsMargins(100,20,100,100)
+        button_grid.setSpacing(20)
 
-            self.create_session_button = QPushButton("Create Session")
-            self.create_session_button.setMinimumHeight(50)
-            self.create_session_button.clicked.connect(lambda: self.create_session())
-            button_grid.addWidget(self.create_session_button, 0, 0)
+        self.create_session_button = QPushButton("Create Session")
+        self.create_session_button.setMinimumHeight(50)
+        self.create_session_button.clicked.connect(lambda: self.create_session())
+        button_grid.addWidget(self.create_session_button, 0, 0)
 
-            self.edit_session_button = QPushButton("Edit Sessions")
-            self.edit_session_button.setMinimumHeight(50)
-            self.edit_session_button.clicked.connect(lambda: self.edit_session())
-            button_grid.addWidget(self.edit_session_button, 0, 1)
+        self.edit_session_button = QPushButton("Edit Sessions")
+        self.edit_session_button.setMinimumHeight(50)
+        self.edit_session_button.clicked.connect(lambda: self.edit_session())
+        button_grid.addWidget(self.edit_session_button, 0, 1)
 
-            self.load_session_button = QPushButton("Load Session")
-            self.load_session_button.setMinimumHeight(50)
-            self.load_session_button.clicked.connect(lambda: self.load_session())
-            button_grid.addWidget(self.load_session_button, 0, 2)
+        self.load_session_button = QPushButton("Load Session")
+        self.load_session_button.setMinimumHeight(50)
+        self.load_session_button.clicked.connect(lambda: self.load_session())
+        button_grid.addWidget(self.load_session_button, 0, 2)
 
-            home_page.addLayout(button_grid)
+        self.exit_button = QPushButton("Exit")
+        self.exit_button.setMinimumHeight(50)
+        self.exit_button.clicked.connect(lambda: self.exit_app())
+        button_grid.addWidget(self.exit_button, 0, 3)
 
-            widget = QWidget()
-            widget.setLayout(home_page)
-            self.setCentralWidget(widget)
+        home_page.addLayout(button_grid)
 
-    def create_session(self):
-        print("CREATE SESSION")
+        widget = QWidget()
+        widget.setLayout(home_page)
+        self.setCentralWidget(widget)
 
-    def edit_session(self):
-        print("EDIT SESSIONS")
+    def exit_app(self):
+        sys.exit()
 
     def load_session(self):
-        print("LOAD SESSION")
+        self.setStyleSheet('')
+        # for now just load the play window
+        self.showPlay()
+
+    def edit_session(self):
+        self.setStyleSheet('')
+        print("EDIT SESSIONS")
+
+    def create_session(self):
+        self.setStyleSheet('')
+        create_session_page = QVBoxLayout()
+        create_session_page.setContentsMargins(0, 0, 0, 0)
+        create_session_page.setSpacing(0)
+
+        bingo_label = QLabel("BINGO")
+        bingo_label.setStyleSheet("font-size: 120px;")
+        bingo_label.setAlignment(Qt.AlignCenter)
+        create_session_page.addWidget(bingo_label)
+
+        # FORM TESTS
+        # creating a group box
+        self.formGroupBox = QGroupBox("Create Session")
+
+        # creating spin box to select age
+        self.numGamesSpinBar = QSpinBox()
+        self.numGamesSpinBar.setMinimum(1)
+        self.numGamesSpinBar.setValue(16)
+
+        # creating combo box to select degree
+        self.degreeComboBox = QComboBox()
+
+        # adding items to the combo box
+        self.nameLineEdit = QLineEdit()
+        self.createForm()
+        # creating a dialog button for ok and cancel
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        # adding action when form is accepted
+        self.buttonBox.accepted.connect(self.saveNewSession)
+
+        # adding action when form is rejected
+        self.buttonBox.rejected.connect(self.reject)
+
+        # adding form group box to the layout
+        create_session_page.addWidget(self.formGroupBox)
+
+        # adding button box to the layout
+        create_session_page.addWidget(self.buttonBox)
+
+        # END FORM TESTS
+
+        widget = QWidget()
+        widget.setLayout(create_session_page)
+        self.setCentralWidget(widget)
+
+    def reject(self):
+        self.showHomePage()
+
+    # create form method
+    def createForm(self):
+        # creating a form layout
+        layout = QFormLayout()
+
+        # adding rows
+        # for name and adding input text
+        layout.addRow(QLabel("Name"), self.nameLineEdit)
+
+        # for age and adding spin box
+        layout.addRow(QLabel("Games"), self.numGamesSpinBar)
+
+        # setting layout
+        self.formGroupBox.setLayout(layout)
+
+    def saveNewSession(self):
+        sessions_list = loadJSONFromFile(sessions_file)
+        found = False
+        session_name = self.nameLineEdit.text()
+        num_games = int(self.numGamesSpinBar.text())
+        msg = QMessageBox()
+        for i in range(len(sessions_list)):
+            if sessions_list[i]["name"] == session_name:
+                found = True
+                msg.setWindowTitle("Warning")
+                msg.setText(f"Session '{session_name}' already exists!")
+                msg.setIcon(QMessageBox.Warning)
+
+                break
+
+        if not found:
+            sessions_list.append(
+                {"name": session_name, "num_games": num_games, "games": []}
+            )
+            try:
+                saveJSONToFile(sessions_file, sessions_list)
+                msg.setWindowTitle("Session Saved")
+                msg.setText(f"New session '{session_name}' successfully saved")
+                msg.setIcon(QMessageBox.Information)
+            except Exception as e:
+                msg.setWindowTitle("Critical")
+                msg.setText(f"Failed to save session!")
+                msg.setInformativeText(f"{e}")
+                msg.setIcon(QMessageBox.Critical)
+        x = msg.exec_() 
+
+        # closing the window
+        #self.close()
 
     def showPlay(self):
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
@@ -149,7 +269,7 @@ class MainWindow(QMainWindow):
             self.head.setStyleSheet(head_style)
             self.head.setAlignment(Qt.AlignCenter)
             layout.addWidget(self.head, letter_row, 0)
-            letter_row+=1
+            letter_row += 1
 
         # Create each ball and store for calling
         self.balls = {}
@@ -221,10 +341,13 @@ class MainWindow(QMainWindow):
         return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
 
 
+
 app = QApplication([])
 
 projector = MainWindow()
 projector.show()
+# We don't need the projector right now, close it
+projector.close()
 
 admin = MainWindow(projector)
 admin.show()
