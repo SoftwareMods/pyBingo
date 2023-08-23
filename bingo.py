@@ -1,7 +1,6 @@
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import random
 
 class Color(QWidget):
 
@@ -159,7 +158,7 @@ class MainWindow(QMainWindow):
         if len(self.called_numbers) >= 2:
             self.previous_num_label.setText(self.setPreviousNumCalledText(self.called_numbers[-2]))
         else:
-            self.previous_num_label.setText('')
+            self.previous_num_label.setText(self.setPreviousNumCalledText(''))
 
         get_nums_called_text = self.getNumbersCalledText(len(self.called_numbers),self.max_ball)
         self.numbers_called.setText(get_nums_called_text)
