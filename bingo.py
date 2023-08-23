@@ -23,6 +23,7 @@ class Ball(QPushButton):
         self.setText(txt)
         self.setStyleSheet(ball_cell_style)
 
+
 class MainWindow(QMainWindow):
     def __init__(self, projector=None):
         super(MainWindow, self).__init__()
@@ -43,17 +44,16 @@ class MainWindow(QMainWindow):
         if projector:
             # If projector was passed then setup start page to begin with
             home_page = QVBoxLayout()
-            home_page.setContentsMargins(0,0,0,0)
+            home_page.setContentsMargins(0, 0, 0, 0)
             home_page.setSpacing(0)
 
-            bingo_label = QLabel('BINGO')
-            bingo_label.setStyleSheet('font-size: 120px;')
+            bingo_label = QLabel("BINGO")
+            bingo_label.setStyleSheet("font-size: 120px;")
             bingo_label.setAlignment(Qt.AlignCenter)
             home_page.addWidget(bingo_label)
 
-
             button_grid = QGridLayout()
-            button_grid.setContentsMargins(20,100,20,100)
+            button_grid.setContentsMargins(20, 100, 20, 100)
             button_grid.setSpacing(50)
 
             self.create_session_button = QPushButton("Create Session")
@@ -70,7 +70,6 @@ class MainWindow(QMainWindow):
             self.load_session_button.setMinimumHeight(50)
             self.load_session_button.clicked.connect(lambda: self.load_session())
             button_grid.addWidget(self.load_session_button, 0, 2)
-      
 
             home_page.addLayout(button_grid)
 
@@ -79,16 +78,16 @@ class MainWindow(QMainWindow):
             self.setCentralWidget(widget)
 
     def create_session(self):
-        print('CREATE SESSION')
+        print("CREATE SESSION")
 
     def edit_session(self):
-        print('EDIT SESSIONS')
+        print("EDIT SESSIONS")
 
     def load_session(self):
         print("LOAD SESSION")
 
     def showPlay(self):
-
+        self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
         self.max_ball = 52
         self.called_numbers = []
 
@@ -104,7 +103,7 @@ class MainWindow(QMainWindow):
         top_half_left.addWidget(self.previous_num_label, stretch=1)
 
         # TODO: Replace this with animaged demo card
-        top_half_left.addWidget(Color("white"), stretch=3)
+        top_half_left.addWidget(Color("#f0f0f0"), stretch=3)
 
         top_half_center = QVBoxLayout()
 
@@ -144,38 +143,21 @@ class MainWindow(QMainWindow):
 
         head_style = "font-size: 24px; padding: 4px 16px; background-color: black; color: white; border: 1px solid gray;"
 
-        self.b_head = QLabel("B")
-        self.b_head.setStyleSheet(head_style)
-        self.b_head.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.b_head, 0, 0)
-
-        self.i_head = QLabel("I")
-        self.i_head.setStyleSheet(head_style)
-        self.i_head.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.i_head, 1, 0)
-
-        self.n_head = QLabel("N")
-        self.n_head.setStyleSheet(head_style)
-        self.n_head.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.n_head, 2, 0)
-
-        self.g_head = QLabel("G")
-        self.g_head.setStyleSheet(head_style)
-        self.g_head.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.g_head, 3, 0)
-
-        self.o_head = QLabel("O")
-        self.o_head.setStyleSheet(head_style)
-        self.o_head.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.o_head, 4, 0)
+        letter_row = 0
+        for key in self.letters.keys():
+            self.head = QLabel(self.letters[str(key)])
+            self.head.setStyleSheet(head_style)
+            self.head.setAlignment(Qt.AlignCenter)
+            layout.addWidget(self.head, letter_row, 0)
+            letter_row+=1
 
         # Create each ball and store for calling
         self.balls = {}
         row = 0
         col = 1
-        rows = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
+
         for i in range(1, 76):
-            letter = rows[str(row)]
+            letter = self.letters[str(row)]
             self.this_ball = Ball(str(i))
             self.balls[f"{letter}{i}"] = self.this_ball
             self.this_ball.clicked.connect(
