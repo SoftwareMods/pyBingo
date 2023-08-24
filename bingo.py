@@ -22,15 +22,11 @@ class Color(QWidget):
         palette.setColor(QPalette.Window, QColor(self.color))
         self.setPalette(palette)
 
-
-
-
 class Ball(QPushButton):
     def __init__(self, txt):
         super(Ball, self).__init__()
         self.setText(txt)
         self.setStyleSheet(ball_cell_style)
-
 
 class MainWindow(QMainWindow):
     def __init__(self, projector=None):
@@ -38,6 +34,11 @@ class MainWindow(QMainWindow):
 
         # Set minimum display size
         self.setMinimumSize(800, 600)
+        self.blackout = False
+        if self.blackout:
+            self.max_ball = 52
+        else:
+            self.max_ball = False
 
         self.projector = projector
         if projector:
@@ -184,7 +185,6 @@ class MainWindow(QMainWindow):
                 msg.setWindowTitle("Warning")
                 msg.setText(f"Session '{session_name}' already exists!")
                 msg.setIcon(QMessageBox.Warning)
-
                 break
 
         if not found:
@@ -208,7 +208,6 @@ class MainWindow(QMainWindow):
 
     def showPlay(self):
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
-        self.max_ball = 52
         self.called_numbers = []
 
         main_div = QVBoxLayout()
@@ -217,7 +216,7 @@ class MainWindow(QMainWindow):
 
         top_half = QHBoxLayout()
         top_half_left = QVBoxLayout()
-        self.previous_num_label = QLabel(self.setPreviousNumCalledText(""))
+        self.previous_num_label = QLabel(self.setPreviousNumCalledText("None"))
         self.previous_num_label.setStyleSheet("font-size: 12px;")
         self.previous_num_label.setAlignment(Qt.AlignCenter)
         top_half_left.addWidget(self.previous_num_label, stretch=1)
@@ -239,7 +238,7 @@ class MainWindow(QMainWindow):
         top_half_center.addWidget(self.called_number, stretch=4)
 
         top_half_right = QVBoxLayout()
-        self.numbers_called = QLabel(self.getNumbersCalledText(0, 52))
+        self.numbers_called = QLabel(self.getNumbersCalledText(0, self.max_ball))
         self.numbers_called.setStyleSheet("font-size: 12px;")
         self.numbers_called.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.numbers_called, stretch=1)
@@ -292,9 +291,62 @@ class MainWindow(QMainWindow):
 
         main_div.addLayout(layout, stretch=2)
 
+        button_grid = QGridLayout()
+        # l, t, r, b
+        button_grid.setContentsMargins(10,5,10,10)
+        button_grid.setSpacing(10)
+
+        self.change_payout_button = QPushButton("Change Payout")
+        self.change_payout_button.setMinimumHeight(50)
+        self.change_payout_button.clicked.connect(lambda: self.payout_dialog())
+        button_grid.addWidget(self.change_payout_button, 0, 0)
+
+        self.change_max_button = QPushButton("Change Max Ball")
+        self.change_max_button.setMinimumHeight(50)
+        self.change_max_button.clicked.connect(lambda: self.maxball_dialog())
+        button_grid.addWidget(self.change_max_button, 0, 1)
+
+        self.claim_bingo_button = QPushButton("Claim Bingo")
+        self.claim_bingo_button.setMinimumHeight(50)
+        self.claim_bingo_button.clicked.connect(lambda: self.edit_session())
+        button_grid.addWidget(self.claim_bingo_button, 0, 2)
+
+        self.next_game_button = QPushButton("Next Game")
+        self.next_game_button.setMinimumHeight(50)
+        self.next_game_button.clicked.connect(lambda: self.next_game())
+        button_grid.addWidget(self.next_game_button, 0, 3)
+
+        self.back_button = QPushButton("Back")
+        self.back_button.setMinimumHeight(50)
+        self.back_button.clicked.connect(lambda: self.confirm_back())
+        button_grid.addWidget(self.back_button, 0, 4)
+
+        main_div.addLayout(button_grid)        
+
         self.widget = QWidget()
         self.widget.setLayout(main_div)
         self.setCentralWidget(self.widget)
+
+    def payout_dialog(self):
+        text, ok = QInputDialog.getText(self, 'Change Payout', 'Enter new payout')
+        if ok:
+            self.payout_number.setText(self.setPayoutText(text))
+
+    def maxball_dialog(self):
+        text, ok = QInputDialog.getText(self, 'Change Max Ball', 'Enter new maximum')
+        called = self.numbers_called.text().split('</span>')[0].split('>')[-1].split('/')[0]
+        if ok:
+            self.numbers_called.setText(self.getNumbersCalledText(called, text))
+
+    def confirm_back(self):
+        msg = QMessageBox()
+        msg.setWindowTitle("Abandon Session")
+        msg.setText(f"Abandon session and return to title page?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.setIcon(QMessageBox.Warning)
+        response = msg.exec_()
+        if response == QMessageBox.Yes:
+            self.showHomePage()
 
     def resizeEvent(self, event):
         pass
@@ -318,7 +370,7 @@ class MainWindow(QMainWindow):
                 self.setPreviousNumCalledText(self.called_numbers[-2])
             )
         else:
-            self.previous_num_label.setText(self.setPreviousNumCalledText(""))
+            self.previous_num_label.setText(self.setPreviousNumCalledText("None"))
 
         get_nums_called_text = self.getNumbersCalledText(
             len(self.called_numbers), self.max_ball
@@ -328,8 +380,11 @@ class MainWindow(QMainWindow):
     def setPayoutText(self, txt):
         return f'Payout<br><span style="color: blue; font-weight: bold;">{txt}</span>'
 
-    def getNumbersCalledText(self, curr, max):
-        return f'Numbers Called<br><span style="color: blue; font-weight: bold;">{curr}/{max}</span>'
+    def getNumbersCalledText(self, curr, max=None):
+        show_max = ""
+        if max:
+            show_max = f"/{max}"
+        return f'Numbers Called<br><span style="color: blue; font-weight: bold;">{curr}{show_max}</span>'
 
     def setPreviousNumCalledText(self, num):
         return f'Previous Number<br><span style="color: blue; font-weight: bold; font-size: 16px;">{num}</span>'
