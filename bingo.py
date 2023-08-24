@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from helpers import *
 import sys
+
 stylesheet = """
     MainWindow {
         background-image: url("images/background.png"); 
@@ -11,6 +12,7 @@ stylesheet = """
     }
 """
 ball_cell_style = "font-size: 24px; padding: 4px 10px; background-color: white; color: gray; border: 1px solid gray;"
+
 
 class Color(QWidget):
     def __init__(self, color):
@@ -22,11 +24,13 @@ class Color(QWidget):
         palette.setColor(QPalette.Window, QColor(self.color))
         self.setPalette(palette)
 
+
 class Ball(QPushButton):
     def __init__(self, txt):
         super(Ball, self).__init__()
         self.setText(txt)
         self.setStyleSheet(ball_cell_style)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, projector=None):
@@ -67,7 +71,7 @@ class MainWindow(QMainWindow):
 
         button_grid = QGridLayout()
         # l, t, r, b
-        button_grid.setContentsMargins(100,20,100,100)
+        button_grid.setContentsMargins(100, 20, 100, 100)
         button_grid.setSpacing(20)
 
         self.create_session_button = QPushButton("Create Session")
@@ -77,7 +81,7 @@ class MainWindow(QMainWindow):
 
         self.edit_session_button = QPushButton("Edit Sessions")
         self.edit_session_button.setMinimumHeight(50)
-        self.edit_session_button.clicked.connect(lambda: self.edit_session())
+        self.edit_session_button.clicked.connect(lambda: self.select_session())
         button_grid.addWidget(self.edit_session_button, 0, 1)
 
         self.load_session_button = QPushButton("Load Session")
@@ -85,10 +89,15 @@ class MainWindow(QMainWindow):
         self.load_session_button.clicked.connect(lambda: self.load_session())
         button_grid.addWidget(self.load_session_button, 0, 2)
 
+        self.about_button = QPushButton("About")
+        self.about_button.setMinimumHeight(50)
+        self.about_button.clicked.connect(lambda: self.show_about())
+        button_grid.addWidget(self.about_button, 0, 3)
+
         self.exit_button = QPushButton("Exit")
         self.exit_button.setMinimumHeight(50)
         self.exit_button.clicked.connect(lambda: self.exit_app())
-        button_grid.addWidget(self.exit_button, 0, 3)
+        button_grid.addWidget(self.exit_button, 0, 4)
 
         home_page.addLayout(button_grid)
 
@@ -96,20 +105,102 @@ class MainWindow(QMainWindow):
         widget.setLayout(home_page)
         self.setCentralWidget(widget)
 
+    def show_about(self):
+        print("awwww, you care?")
+
     def exit_app(self):
         sys.exit()
 
+    def load_all_sessions(self):
+        return loadJSONFromFile(sessions_file)
+
     def load_session(self):
-        self.setStyleSheet('')
+        sessions = self.load_all_sessions()
+        has_games = []
+        for s in range(len(sessions)):
+            if len(sessions[s]["games"]) > 0:
+                has_games.append(sessions[s])
+
+        if not has_games:
+            msg = QMessageBox()
+            msg.setWindowTitle("No games available")
+            msg.setText(f"No sessions available with games.")
+            msg.setInformativeText("You must first add games to a created session.")
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.setIcon(QMessageBox.Warning)
+            msg.exec_()
+            self.showHomePage()
+        else:
+            print("load selection window with list of sessions that have games")
         # for now just load the play window
-        self.showPlay()
+        # self.showPlay()
+
+    def select_session(self):
+        # First pop up a window to select which session
+        window = QWidget()
+        self.listWidget = QListWidget()
+
+        sessions = self.load_all_sessions()
+        for session in range(len(sessions)):
+            name = sessions[session]["name"]
+            item = QListWidgetItem(name, self.listWidget)
+            self.listWidget.addItem(item)
+
+        self.listWidget.itemDoubleClicked.connect(lambda: self.edit_session())
+        window_layout = QVBoxLayout(window)
+        window_layout.addWidget(self.listWidget)
+        window.setLayout(window_layout)
+
+        self.setCentralWidget(window)
 
     def edit_session(self):
-        self.setStyleSheet('')
-        print("EDIT SESSIONS")
+        session_name = self.listWidget.selectedItems()[0].text()
+        # Retrieve session with session_name
+        sessions = self.load_all_sessions()
+        selected_session = False
+        for session in range(len(sessions)):
+            if sessions[session]["name"] == session_name:
+                selected_session = sessions[session]
+                break
+
+        # Populate selected session to page
+        self.setStyleSheet("")
+        edit_session_page = QVBoxLayout()
+        edit_session_page.setContentsMargins(0, 0, 0, 0)
+        edit_session_page.setSpacing(0)
+
+        # Content
+        # creating a group box
+        self.formGroupBox = QGroupBox("Edit Session")
+
+        # adding items to the combo box
+        self.nameLineEdit = QLineEdit()
+        self.nameLineEdit.setText(session_name)
+        # creating a form layout
+        update_form = QFormLayout()
+        self.new_name = QLabel("Name")
+        self.game_typeList = QListWidget()
+
+        update_form.addRow(self.new_name, self.nameLineEdit)
+
+        self.formGroupBox.setLayout(update_form)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+
+        # adding action when form is accepted
+        #self.buttonBox.accepted.connect(lambda checked, sessions=sessions: saveJSONToFile(sessions_file,sessions))
+
+        self.buttonBox.rejected.connect(self.showHomePage)
+        edit_session_page.addWidget(self.formGroupBox)
+        edit_session_page.addWidget(self.buttonBox)
+
+        ## end Content ##
+
+        widget = QWidget()
+        widget.setLayout(edit_session_page)
+        self.setCentralWidget(widget)
 
     def create_session(self):
-        self.setStyleSheet('')
+        self.setStyleSheet("")
         create_session_page = QVBoxLayout()
         create_session_page.setContentsMargins(0, 0, 0, 0)
         create_session_page.setSpacing(0)
@@ -119,7 +210,6 @@ class MainWindow(QMainWindow):
         bingo_label.setAlignment(Qt.AlignCenter)
         create_session_page.addWidget(bingo_label)
 
-        # FORM TESTS
         # creating a group box
         self.formGroupBox = QGroupBox("Create Session")
 
@@ -149,7 +239,6 @@ class MainWindow(QMainWindow):
         # adding button box to the layout
         create_session_page.addWidget(self.buttonBox)
 
-        # END FORM TESTS
 
         widget = QWidget()
         widget.setLayout(create_session_page)
@@ -201,10 +290,7 @@ class MainWindow(QMainWindow):
                 msg.setText(f"Failed to save session!")
                 msg.setInformativeText(f"{e}")
                 msg.setIcon(QMessageBox.Critical)
-        x = msg.exec_() 
-
-        # closing the window
-        #self.close()
+        x = msg.exec_()
 
     def showPlay(self):
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
@@ -293,7 +379,7 @@ class MainWindow(QMainWindow):
 
         button_grid = QGridLayout()
         # l, t, r, b
-        button_grid.setContentsMargins(10,5,10,10)
+        button_grid.setContentsMargins(10, 5, 10, 10)
         button_grid.setSpacing(10)
 
         self.change_payout_button = QPushButton("Change Payout")
@@ -321,20 +407,22 @@ class MainWindow(QMainWindow):
         self.back_button.clicked.connect(lambda: self.confirm_back())
         button_grid.addWidget(self.back_button, 0, 4)
 
-        main_div.addLayout(button_grid)        
+        main_div.addLayout(button_grid)
 
         self.widget = QWidget()
         self.widget.setLayout(main_div)
         self.setCentralWidget(self.widget)
 
     def payout_dialog(self):
-        text, ok = QInputDialog.getText(self, 'Change Payout', 'Enter new payout')
+        text, ok = QInputDialog.getText(self, "Change Payout", "Enter new payout")
         if ok:
             self.payout_number.setText(self.setPayoutText(text))
 
     def maxball_dialog(self):
-        text, ok = QInputDialog.getText(self, 'Change Max Ball', 'Enter new maximum')
-        called = self.numbers_called.text().split('</span>')[0].split('>')[-1].split('/')[0]
+        text, ok = QInputDialog.getText(self, "Change Max Ball", "Enter new maximum")
+        called = (
+            self.numbers_called.text().split("</span>")[0].split(">")[-1].split("/")[0]
+        )
         if ok:
             self.numbers_called.setText(self.getNumbersCalledText(called, text))
 
@@ -394,7 +482,6 @@ class MainWindow(QMainWindow):
         if total:
             show_total = f"/{total}"
         return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
-
 
 
 app = QApplication([])

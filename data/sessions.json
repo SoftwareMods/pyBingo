@@ -3,5 +3,10 @@
         "name": "Standard",
         "num_games": 16,
         "games": []
+    },
+    {
+        "name": "Extended",
+        "num_games": 20,
+        "games": []
     }
 ]

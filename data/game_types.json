@@ -1,0 +1,27 @@
+[
+    {
+        "name": "Regular or 4 Corners",
+        "patterns": [],
+        "bonus_max": 9
+    },
+    {
+        "name": "Postage Stamp",
+        "patterns": [],
+        "bonus_max": 9
+    },
+    {
+        "name": "Any Line Across",
+        "patterns": [],
+        "bonus_max": 9
+    },
+    {
+        "name": "Letter X",
+        "patterns": [],
+        "bonus_max": 9
+    },
+    {
+        "name": "4 Inner Corners",
+        "patterns": [],
+        "bonus_max": 9
+    }
+]
