@@ -1,10 +1,30 @@
 [
     {
+        "id": 1,
         "name": "Standard",
-        "num_games": 16,
-        "games": []
+        "num_games": 17,
+        "games": [
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "Any Line Across",
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "Letter X",
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "4 Inner Corners",
+            "Regular or 4 Corners",
+            "Regular or 4 Corners",
+            "Postage Stamp",
+            "Regular or 4 Corners",
+            "Blackout"
+        ]
     },
     {
+        "id": 2,
         "name": "Extended",
         "num_games": 20,
         "games": []
