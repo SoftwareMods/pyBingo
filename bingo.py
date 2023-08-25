@@ -38,11 +38,8 @@ class MainWindow(QMainWindow):
 
         # Set minimum display size
         self.setMinimumSize(800, 600)
-        self.blackout = False
-        if self.blackout:
-            self.max_ball = 52
-        else:
-            self.max_ball = False
+
+        self.max_ball = False
 
         self.projector = projector
         if projector:
@@ -142,7 +139,7 @@ class MainWindow(QMainWindow):
         for session in range(len(sessions)):
             name = sessions[session]["name"]
             if showPlay:
-                if len(sessions[session]['games']) == 0:
+                if len(sessions[session]["games"]) == 0:
                     continue
             item = QListWidgetItem(name, self.listWidget)
             self.listWidget.addItem(item)
@@ -364,8 +361,10 @@ class MainWindow(QMainWindow):
                 self.session = kwargs["session"]
                 game_number = game_index + 1
                 self.payout = kwargs["payout"]
-                self.projector.previous_num_label.setText(self.setPreviousNumCalledText('None'))
-                self.projector.called_number.setText('')
+                self.projector.previous_num_label.setText(
+                    self.setPreviousNumCalledText("None")
+                )
+                self.projector.called_number.setText("")
                 self.projector.numbers_called.setText(self.getNumbersCalledText(0))
                 for ball in self.projector.balls:
                     self.projector.balls[ball].setStyleSheet(ball_cell_style)
@@ -421,9 +420,11 @@ class MainWindow(QMainWindow):
 
         self.game_number = QLabel(self.setGameNumberText(game_number))
         if self.session:
-            total_games = self.session['num_games']
+            total_games = self.session["num_games"]
             self.game_number.setText(self.setGameNumberText(game_number, total_games))
-            self.projector.game_number.setText(self.setGameNumberText(game_number, total_games))
+            self.projector.game_number.setText(
+                self.setGameNumberText(game_number, total_games)
+            )
         self.game_number.setStyleSheet("font-size: 12px;")
         self.game_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.game_number, stretch=1)
@@ -454,9 +455,10 @@ class MainWindow(QMainWindow):
             letter = self.letters[str(row)]
             self.this_ball = Ball(str(i))
             self.balls[f"{letter}{i}"] = self.this_ball
-            self.this_ball.clicked.connect(
-                lambda checked, text=f"{letter}{i}": self.ball_clicked(text)
-            )
+            if self.projector:
+                self.this_ball.clicked.connect(
+                    lambda checked, text=f"{letter}{i}": self.ball_clicked(text)
+                )
             layout.addWidget(self.this_ball, row, col)
             if col < 15:
                 col += 1
