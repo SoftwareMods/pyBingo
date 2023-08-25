@@ -266,11 +266,6 @@ class MainWindow(QMainWindow):
         create_session_page.setContentsMargins(0, 0, 0, 0)
         create_session_page.setSpacing(0)
 
-        bingo_label = QLabel("BINGO")
-        bingo_label.setStyleSheet("font-size: 120px;")
-        bingo_label.setAlignment(Qt.AlignCenter)
-        create_session_page.addWidget(bingo_label)
-
         # creating a group box
         self.formGroupBox = QGroupBox("Create Session")
 
@@ -369,6 +364,11 @@ class MainWindow(QMainWindow):
                 self.session = kwargs["session"]
                 game_number = game_index + 1
                 self.payout = kwargs["payout"]
+                self.projector.previous_num_label.setText(self.setPreviousNumCalledText('None'))
+                self.projector.called_number.setText('')
+                self.projector.numbers_called.setText(self.getNumbersCalledText(0))
+                for ball in self.projector.balls:
+                    self.projector.balls[ball].setStyleSheet(ball_cell_style)
             except:
                 pass
 
@@ -392,7 +392,7 @@ class MainWindow(QMainWindow):
         top_half_center = QVBoxLayout()
 
         # top_half_center content
-        self.game_type = QLabel("Game Type Placeholder")
+        self.game_type = QLabel("")
 
         if self.session:
             self.game_type.setText(self.session["games"][game_index])
@@ -421,8 +421,9 @@ class MainWindow(QMainWindow):
 
         self.game_number = QLabel(self.setGameNumberText(game_number))
         if self.session:
-            self.game_number.setText(self.setGameNumberText(game_number))
-            self.projector.game_number.setText(self.setGameNumberText(game_number))
+            total_games = self.session['num_games']
+            self.game_number.setText(self.setGameNumberText(game_number, total_games))
+            self.projector.game_number.setText(self.setGameNumberText(game_number, total_games))
         self.game_number.setStyleSheet("font-size: 12px;")
         self.game_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.game_number, stretch=1)
@@ -465,36 +466,37 @@ class MainWindow(QMainWindow):
 
         main_div.addLayout(layout, stretch=2)
 
-        button_grid = QGridLayout()
-        # l, t, r, b
-        button_grid.setContentsMargins(10, 5, 10, 10)
-        button_grid.setSpacing(10)
+        if self.projector:
+            button_grid = QGridLayout()
+            # l, t, r, b
+            button_grid.setContentsMargins(10, 5, 10, 10)
+            button_grid.setSpacing(10)
 
-        self.change_payout_button = QPushButton("Change Payout")
-        self.change_payout_button.setMinimumHeight(50)
-        self.change_payout_button.clicked.connect(self.payout_dialog)
-        button_grid.addWidget(self.change_payout_button, 0, 0)
+            self.change_payout_button = QPushButton("Change Payout")
+            self.change_payout_button.setMinimumHeight(50)
+            self.change_payout_button.clicked.connect(self.payout_dialog)
+            button_grid.addWidget(self.change_payout_button, 0, 0)
 
-        self.change_max_button = QPushButton("Change Max Ball")
-        self.change_max_button.setMinimumHeight(50)
-        self.change_max_button.clicked.connect(self.maxball_dialog)
-        button_grid.addWidget(self.change_max_button, 0, 1)
+            self.change_max_button = QPushButton("Change Max Ball")
+            self.change_max_button.setMinimumHeight(50)
+            self.change_max_button.clicked.connect(self.maxball_dialog)
+            button_grid.addWidget(self.change_max_button, 0, 1)
 
-        self.next_game_button = QPushButton("Next Game")
-        self.next_game_button.setMinimumHeight(50)
-        self.next_game_button.clicked.connect(
-            lambda session=self.session, game_index=game_index + 1: self.next_game(
-                session, game_index
+            self.next_game_button = QPushButton("Next Game")
+            self.next_game_button.setMinimumHeight(50)
+            self.next_game_button.clicked.connect(
+                lambda session=self.session, game_index=game_index + 1: self.next_game(
+                    session, game_index
+                )
             )
-        )
-        button_grid.addWidget(self.next_game_button, 0, 2)
+            button_grid.addWidget(self.next_game_button, 0, 2)
 
-        self.back_button = QPushButton("Back")
-        self.back_button.setMinimumHeight(50)
-        self.back_button.clicked.connect(self.confirm_back)
-        button_grid.addWidget(self.back_button, 0, 4)
+            self.back_button = QPushButton("Back")
+            self.back_button.setMinimumHeight(50)
+            self.back_button.clicked.connect(self.confirm_back)
+            button_grid.addWidget(self.back_button, 0, 3)
 
-        main_div.addLayout(button_grid)
+            main_div.addLayout(button_grid)
 
         self.widget = QWidget()
         self.widget.setLayout(main_div)
@@ -588,7 +590,7 @@ class MainWindow(QMainWindow):
     def setGameNumberText(self, num, total=None):
         show_total = ""
         if total:
-            show_total = f"/{total}"
+            show_total = f" / {total}"
         return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
 
 
