@@ -76,27 +76,27 @@ class MainWindow(QMainWindow):
 
         self.create_session_button = QPushButton("Create Session")
         self.create_session_button.setMinimumHeight(50)
-        self.create_session_button.clicked.connect(lambda: self.create_session())
+        self.create_session_button.clicked.connect(self.create_session)
         button_grid.addWidget(self.create_session_button, 0, 0)
 
         self.edit_session_button = QPushButton("Edit Sessions")
         self.edit_session_button.setMinimumHeight(50)
-        self.edit_session_button.clicked.connect(lambda: self.select_session())
+        self.edit_session_button.clicked.connect(self.select_session)
         button_grid.addWidget(self.edit_session_button, 0, 1)
 
         self.load_session_button = QPushButton("Load Session")
         self.load_session_button.setMinimumHeight(50)
-        self.load_session_button.clicked.connect(lambda: self.load_session())
+        self.load_session_button.clicked.connect(self.load_session)
         button_grid.addWidget(self.load_session_button, 0, 2)
 
         self.about_button = QPushButton("About")
         self.about_button.setMinimumHeight(50)
-        self.about_button.clicked.connect(lambda: self.show_about())
+        self.about_button.clicked.connect(self.show_about)
         button_grid.addWidget(self.about_button, 0, 3)
 
         self.exit_button = QPushButton("Exit")
         self.exit_button.setMinimumHeight(50)
-        self.exit_button.clicked.connect(lambda: self.exit_app())
+        self.exit_button.clicked.connect(self.exit_app)
         button_grid.addWidget(self.exit_button, 0, 4)
 
         home_page.addLayout(button_grid)
@@ -141,17 +141,27 @@ class MainWindow(QMainWindow):
         sessions = self.load_all_sessions()
         for session in range(len(sessions)):
             name = sessions[session]["name"]
+            if showPlay:
+                if len(sessions[session]['games']) == 0:
+                    continue
             item = QListWidgetItem(name, self.listWidget)
             self.listWidget.addItem(item)
 
         if not showPlay:
-            self.listWidget.itemDoubleClicked.connect(lambda: self.edit_session())
+            self.listWidget.itemDoubleClicked.connect(self.edit_session)
         else:
             self.listWidget.itemDoubleClicked.connect(
                 lambda doCheck=True: self.showPlay(doCheck)
             )
         window_layout = QVBoxLayout(window)
         window_layout.addWidget(self.listWidget)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
+
+        # adding action when form is rejected
+        self.buttonBox.rejected.connect(self.showHomePage)
+
+        # adding button box to the layout
+        window_layout.addWidget(self.buttonBox)
         window.setLayout(window_layout)
 
         self.setCentralWidget(window)
@@ -462,18 +472,13 @@ class MainWindow(QMainWindow):
 
         self.change_payout_button = QPushButton("Change Payout")
         self.change_payout_button.setMinimumHeight(50)
-        self.change_payout_button.clicked.connect(lambda: self.payout_dialog())
+        self.change_payout_button.clicked.connect(self.payout_dialog)
         button_grid.addWidget(self.change_payout_button, 0, 0)
 
         self.change_max_button = QPushButton("Change Max Ball")
         self.change_max_button.setMinimumHeight(50)
-        self.change_max_button.clicked.connect(lambda: self.maxball_dialog())
+        self.change_max_button.clicked.connect(self.maxball_dialog)
         button_grid.addWidget(self.change_max_button, 0, 1)
-
-        self.claim_bingo_button = QPushButton("Claim Bingo")
-        self.claim_bingo_button.setMinimumHeight(50)
-        self.claim_bingo_button.clicked.connect(lambda: self.edit_session())
-        button_grid.addWidget(self.claim_bingo_button, 0, 2)
 
         self.next_game_button = QPushButton("Next Game")
         self.next_game_button.setMinimumHeight(50)
@@ -482,11 +487,11 @@ class MainWindow(QMainWindow):
                 session, game_index
             )
         )
-        button_grid.addWidget(self.next_game_button, 0, 3)
+        button_grid.addWidget(self.next_game_button, 0, 2)
 
         self.back_button = QPushButton("Back")
         self.back_button.setMinimumHeight(50)
-        self.back_button.clicked.connect(lambda: self.confirm_back())
+        self.back_button.clicked.connect(self.confirm_back)
         button_grid.addWidget(self.back_button, 0, 4)
 
         main_div.addLayout(button_grid)
@@ -496,12 +501,20 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
     def next_game(self, session, game_index):
-        self.showPlay(
-            doCheck=False,
-            game_index=game_index,
-            session=self.session,
-            payout=self.payout,
-        )
+        # session variable is not used here but must be passed to save self.session
+        msg = QMessageBox()
+        msg.setWindowTitle("Continue Session")
+        msg.setText(f"Proceed to next game?")
+        msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg.setIcon(QMessageBox.Question)
+        response = msg.exec_()
+        if response == QMessageBox.Yes:
+            self.showPlay(
+                doCheck=False,
+                game_index=game_index,
+                session=self.session,
+                payout=self.payout,
+            )
 
     def payout_dialog(self):
         text, ok = QInputDialog.getText(self, "Change Payout", "Enter new payout")
