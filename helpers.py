@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 sessions_file = 'data/sessions.json'
+game_types_file = 'data/game_types.json'
 
 def saveJSONToFile(json_file,json_obj):
     Path(json_file).write_text(json.dumps(json_obj))

@@ -131,11 +131,9 @@ class MainWindow(QMainWindow):
             msg.exec_()
             self.showHomePage()
         else:
-            print("load selection window with list of sessions that have games")
-        # for now just load the play window
-        # self.showPlay()
+            self.select_session(showPlay=True)
 
-    def select_session(self):
+    def select_session(self, showPlay=False):
         # First pop up a window to select which session
         window = QWidget()
         self.listWidget = QListWidget()
@@ -146,7 +144,12 @@ class MainWindow(QMainWindow):
             item = QListWidgetItem(name, self.listWidget)
             self.listWidget.addItem(item)
 
-        self.listWidget.itemDoubleClicked.connect(lambda: self.edit_session())
+        if not showPlay:
+            self.listWidget.itemDoubleClicked.connect(lambda: self.edit_session())
+        else:
+            self.listWidget.itemDoubleClicked.connect(
+                lambda doCheck=True: self.showPlay(doCheck)
+            )
         window_layout = QVBoxLayout(window)
         window_layout.addWidget(self.listWidget)
         window.setLayout(window_layout)
@@ -165,9 +168,9 @@ class MainWindow(QMainWindow):
 
         # Populate selected session to page
         self.setStyleSheet("")
-        edit_session_page = QVBoxLayout()
-        edit_session_page.setContentsMargins(0, 0, 0, 0)
-        edit_session_page.setSpacing(0)
+        self.edit_session_page = QVBoxLayout()
+        self.edit_session_page.setContentsMargins(0, 0, 0, 0)
+        self.edit_session_page.setSpacing(0)
 
         # Content
         # creating a group box
@@ -177,27 +180,75 @@ class MainWindow(QMainWindow):
         self.nameLineEdit = QLineEdit()
         self.nameLineEdit.setText(session_name)
         # creating a form layout
-        update_form = QFormLayout()
+        self.update_form = QFormLayout()
         self.new_name = QLabel("Name")
-        self.game_typeList = QListWidget()
+        game_types = loadJSONFromFile(game_types_file)
 
-        update_form.addRow(self.new_name, self.nameLineEdit)
+        self.update_form.addRow(self.new_name, self.nameLineEdit)
+        self.update_form.addRow(QLabel("Games"))
+        self.cb_boxes = {}
 
-        self.formGroupBox.setLayout(update_form)
+        for i in range(selected_session["num_games"]):
+            self.this_combo = QComboBox()
+            self.cb_boxes[i] = self.this_combo
+            for type in range(len(game_types)):
+                self.cb_boxes[i].addItem(game_types[type]["name"])
+                try:
+                    if selected_session["games"][i]:
+                        if selected_session["games"][i] == game_types[type]["name"]:
+                            self.this_combo.setCurrentText(game_types[type]["name"])
+                except:
+                    pass
+            self.update_form.addRow(QLabel(str(i + 1)), self.cb_boxes[i])
+
+        self.formGroupBox.setLayout(self.update_form)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
         # adding action when form is accepted
-        #self.buttonBox.accepted.connect(lambda checked, sessions=sessions: saveJSONToFile(sessions_file,sessions))
+        self.buttonBox.accepted.connect(
+            lambda form=self.formGroupBox, id=selected_session["id"]: self.getForm(
+                form, id
+            )
+        )
 
         self.buttonBox.rejected.connect(self.showHomePage)
-        edit_session_page.addWidget(self.formGroupBox)
-        edit_session_page.addWidget(self.buttonBox)
+        self.edit_session_page.addWidget(self.formGroupBox)
+        self.edit_session_page.addWidget(self.buttonBox)
 
         ## end Content ##
 
         widget = QWidget()
-        widget.setLayout(edit_session_page)
+        widget.setLayout(self.edit_session_page)
         self.setCentralWidget(widget)
+
+    def getForm(self, form, id):
+        game_types = []
+        for widget in form.children():
+            if isinstance(widget, QLineEdit):
+                new_session_name = widget.text()
+
+            if isinstance(widget, QComboBox):
+                game_types.append(widget.currentText())
+
+        saved_sessions = loadJSONFromFile(sessions_file)
+        for n in range(len(saved_sessions)):
+            if saved_sessions[n]["id"] == id:
+                saved_sessions[n]["name"] = new_session_name
+                saved_sessions[n]["games"] = game_types
+                break
+        msg = QMessageBox()
+        try:
+            saveJSONToFile(sessions_file, saved_sessions)
+            msg.setWindowTitle("Session Saved")
+            msg.setText(f"Session '{new_session_name}' successfully saved")
+            msg.setIcon(QMessageBox.Information)
+        except Exception as e:
+            msg.setWindowTitle("Critical")
+            msg.setText(f"Failed to save session!")
+            msg.setInformativeText(f"{e}")
+            msg.setIcon(QMessageBox.Critical)
+        x = msg.exec_()
+        self.showHomePage()
 
     def create_session(self):
         self.setStyleSheet("")
@@ -239,7 +290,6 @@ class MainWindow(QMainWindow):
         # adding button box to the layout
         create_session_page.addWidget(self.buttonBox)
 
-
         widget = QWidget()
         widget.setLayout(create_session_page)
         self.setCentralWidget(widget)
@@ -263,8 +313,8 @@ class MainWindow(QMainWindow):
         self.formGroupBox.setLayout(layout)
 
     def saveNewSession(self):
-        sessions_list = loadJSONFromFile(sessions_file)
         found = False
+        sessions_list = loadJSONFromFile(sessions_file)
         session_name = self.nameLineEdit.text()
         num_games = int(self.numGamesSpinBar.text())
         msg = QMessageBox()
@@ -292,7 +342,26 @@ class MainWindow(QMainWindow):
                 msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
 
-    def showPlay(self):
+    def showPlay(self, doCheck=False, game_index=0, **kwargs):
+        self.setStyleSheet("")
+        sessions = loadJSONFromFile(sessions_file)
+        self.session = False
+        self.payout = 0.0
+        game_number = game_index + 1
+        if doCheck:
+            session_name = self.listWidget.selectedItems()[0].text()
+            for i in range(len(sessions)):
+                if sessions[i]["name"] == session_name:
+                    self.session = sessions[i]
+                    break
+        else:
+            try:
+                self.session = kwargs["session"]
+                game_number = game_index + 1
+                self.payout = kwargs["payout"]
+            except:
+                pass
+
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
         self.called_numbers = []
 
@@ -313,7 +382,11 @@ class MainWindow(QMainWindow):
         top_half_center = QVBoxLayout()
 
         # top_half_center content
-        self.game_type = QLabel("Regular or 4 Corners")
+        self.game_type = QLabel("Game Type Placeholder")
+
+        if self.session:
+            self.game_type.setText(self.session["games"][game_index])
+            self.projector.game_type.setText(self.session["games"][game_index])
         self.game_type.setStyleSheet("font-size: 18px;")
         self.game_type.setAlignment(Qt.AlignCenter)
         top_half_center.addWidget(self.game_type, stretch=1)
@@ -329,12 +402,17 @@ class MainWindow(QMainWindow):
         self.numbers_called.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.numbers_called, stretch=1)
 
-        self.payout_number = QLabel(self.setPayoutText(15.00))
+        self.payout_number = QLabel(self.setPayoutText(self.payout))
+        if self.session:
+            self.payout_number.setText(self.setPayoutText(self.payout))
         self.payout_number.setStyleSheet("font-size: 12px;")
         self.payout_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.payout_number, stretch=1)
 
-        self.game_number = QLabel(self.setGameNumberText(1))
+        self.game_number = QLabel(self.setGameNumberText(game_number))
+        if self.session:
+            self.game_number.setText(self.setGameNumberText(game_number))
+            self.projector.game_number.setText(self.setGameNumberText(game_number))
         self.game_number.setStyleSheet("font-size: 12px;")
         self.game_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.game_number, stretch=1)
@@ -399,7 +477,11 @@ class MainWindow(QMainWindow):
 
         self.next_game_button = QPushButton("Next Game")
         self.next_game_button.setMinimumHeight(50)
-        self.next_game_button.clicked.connect(lambda: self.next_game())
+        self.next_game_button.clicked.connect(
+            lambda session=self.session, game_index=game_index + 1: self.next_game(
+                session, game_index
+            )
+        )
         button_grid.addWidget(self.next_game_button, 0, 3)
 
         self.back_button = QPushButton("Back")
@@ -413,10 +495,20 @@ class MainWindow(QMainWindow):
         self.widget.setLayout(main_div)
         self.setCentralWidget(self.widget)
 
+    def next_game(self, session, game_index):
+        self.showPlay(
+            doCheck=False,
+            game_index=game_index,
+            session=self.session,
+            payout=self.payout,
+        )
+
     def payout_dialog(self):
         text, ok = QInputDialog.getText(self, "Change Payout", "Enter new payout")
         if ok:
+            self.payout = text
             self.payout_number.setText(self.setPayoutText(text))
+            self.projector.payout_number.setText(self.setPayoutText(text))
 
     def maxball_dialog(self):
         text, ok = QInputDialog.getText(self, "Change Max Ball", "Enter new maximum")
@@ -425,6 +517,9 @@ class MainWindow(QMainWindow):
         )
         if ok:
             self.numbers_called.setText(self.getNumbersCalledText(called, text))
+            self.projector.numbers_called.setText(
+                self.getNumbersCalledText(called, text)
+            )
 
     def confirm_back(self):
         msg = QMessageBox()
@@ -485,11 +580,8 @@ class MainWindow(QMainWindow):
 
 
 app = QApplication([])
-
 projector = MainWindow()
 projector.show()
-# We don't need the projector right now, close it
-projector.close()
 
 admin = MainWindow(projector)
 admin.show()

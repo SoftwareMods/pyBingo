@@ -1,27 +1,38 @@
 [
     {
+        "id": 1,
         "name": "Regular or 4 Corners",
         "patterns": [],
         "bonus_max": 9
     },
     {
+        "id": 2,
         "name": "Postage Stamp",
         "patterns": [],
         "bonus_max": 9
     },
     {
+        "id": 3,
         "name": "Any Line Across",
         "patterns": [],
         "bonus_max": 9
     },
     {
+        "id": 4,
         "name": "Letter X",
         "patterns": [],
         "bonus_max": 9
     },
     {
+        "id": 5,
         "name": "4 Inner Corners",
         "patterns": [],
         "bonus_max": 9
+    },
+    {
+        "id": 6,
+        "name": "Blackout",
+        "patterns": [],
+        "bonus_max": 49
     }
 ]
