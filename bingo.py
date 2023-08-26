@@ -4,11 +4,6 @@ from PyQt5.QtCore import *
 from helpers import *
 import sys
 
-# TODO: Create pattern maker
-# TODO: Rotate through game patterns
-# TODO: Fill out settings page
-# TODO: Save and apply settings 
-
 stylesheet = """
     MainWindow {
         background-image: url("images/background.png"); 
@@ -250,7 +245,6 @@ class MainWindow(QMainWindow):
         buttons_grid.addWidget(self.cancel_button, 0, 1)
         about_software.addLayout(about_software_top)
         about_software.addLayout(about_software_bottom)
-        
 
         about_page.addLayout(about_developer)
         about_page.addLayout(about_software)
@@ -499,7 +493,7 @@ class MainWindow(QMainWindow):
                 msg.setWindowTitle("Session Saved")
                 msg.setText(f"New session '{session_name}' successfully saved")
                 msg.setIcon(QMessageBox.Information)
-                saved=True
+                saved = True
             except Exception as e:
                 msg.setWindowTitle("Critical")
                 msg.setText(f"Failed to save session!")
