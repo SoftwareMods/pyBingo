@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.setMinimumHeight(50)
-        self.settings_button.clicked.connect(self.show_about)
+        self.settings_button.clicked.connect(self.show_settings)
         button_grid.addWidget(self.settings_button, 1, 1)
 
         self.exit_button = QPushButton("Exit")
@@ -106,6 +106,9 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(home_page)
         self.setCentralWidget(widget)
+
+    def show_settings(self):
+        print('Show the settings')
 
     def show_about(self):
         self.setStyleSheet("")
