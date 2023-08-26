@@ -168,7 +168,6 @@ class MainWindow(QMainWindow):
 
         about_developer = QVBoxLayout()
         about_developer.setContentsMargins(0, 0, 0, 0)
-        # about_developer.setSpacing(0)
 
         # image path
         imgpath = "images/developer_scott_rowley.png"
@@ -192,7 +191,7 @@ class MainWindow(QMainWindow):
         # another label to put text
         developer_name = "Scott Rowley"
         name_styled = f'<span style="font-size: 32px;">{developer_name}</span>'
-        developer_bio = f"""{name_styled}<br><a href="mailto:scott.m.rowley@gmail.com?subject='Bingo Contact'">scott.m.rowley@gmail.com</a><br><br>
+        developer_bio = f"""{name_styled}<br><a href="mailto:scott.m.rowley@gmail.com?subject='pyBingo Contact'">scott.m.rowley@gmail.com</a><br><br>
         Scott first started programming with QBasic in 1993
         and has since moved on to learn HTML, CSS, JavaScript/JQuery, SQL, PHP, BASH (Bourne-Again Shell), SAS, and Python.<br><br<br>
         Use the email address above to suggest updates or to contact Scott for your development needs.
