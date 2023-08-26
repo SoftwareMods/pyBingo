@@ -465,10 +465,10 @@ class MainWindow(QMainWindow):
                 game_number = game_index + 1
                 self.payout = kwargs["payout"]
                 self.projector.previous_num_label.setText(
-                    self.setPreviousNumCalledText("None")
+                    setPreviousNumCalledText("None")
                 )
                 self.projector.called_number.setText("")
-                self.projector.numbers_called.setText(self.getNumbersCalledText(0))
+                self.projector.numbers_called.setText(getNumbersCalledText(0))
                 for ball in self.projector.balls:
                     self.projector.balls[ball].setStyleSheet(ball_cell_style)
             except:
@@ -483,7 +483,7 @@ class MainWindow(QMainWindow):
 
         top_half = QHBoxLayout()
         top_half_left = QVBoxLayout()
-        self.previous_num_label = QLabel(self.setPreviousNumCalledText("None"))
+        self.previous_num_label = QLabel(setPreviousNumCalledText("None"))
         self.previous_num_label.setStyleSheet("font-size: 12px;")
         self.previous_num_label.setAlignment(Qt.AlignCenter)
         top_half_left.addWidget(self.previous_num_label, stretch=1)
@@ -509,24 +509,24 @@ class MainWindow(QMainWindow):
         top_half_center.addWidget(self.called_number, stretch=4)
 
         top_half_right = QVBoxLayout()
-        self.numbers_called = QLabel(self.getNumbersCalledText(0, self.max_ball))
+        self.numbers_called = QLabel(getNumbersCalledText(0, self.max_ball))
         self.numbers_called.setStyleSheet("font-size: 12px;")
         self.numbers_called.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.numbers_called, stretch=1)
 
-        self.payout_number = QLabel(self.setPayoutText(self.payout))
+        self.payout_number = QLabel(setPayoutText(self.payout))
         if self.session:
-            self.payout_number.setText(self.setPayoutText(self.payout))
+            self.payout_number.setText(setPayoutText(self.payout))
         self.payout_number.setStyleSheet("font-size: 12px;")
         self.payout_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.payout_number, stretch=1)
 
-        self.game_number = QLabel(self.setGameNumberText(game_number))
+        self.game_number = QLabel(setGameNumberText(game_number))
         if self.session:
             total_games = self.session["num_games"]
-            self.game_number.setText(self.setGameNumberText(game_number, total_games))
+            self.game_number.setText(setGameNumberText(game_number, total_games))
             self.projector.game_number.setText(
-                self.setGameNumberText(game_number, total_games)
+                setGameNumberText(game_number, total_games)
             )
         self.game_number.setStyleSheet("font-size: 12px;")
         self.game_number.setAlignment(Qt.AlignCenter)
@@ -597,11 +597,8 @@ class MainWindow(QMainWindow):
                 )
             else:
                 self.next_end_button.setText("End Session")
-                self.next_end_button.clicked.connect(
-                    lambda session=self.session, game_index=game_index + 1: self.next_game(
-                        session, game_index
-                    )
-                )
+                # For now, just go back to the home page.
+                self.next_end_button.clicked.connect(self.showHomePage)
             button_grid.addWidget(self.next_end_button, 0, 2)
 
             self.back_button = QPushButton("Back")
@@ -635,8 +632,8 @@ class MainWindow(QMainWindow):
         text, ok = QInputDialog.getText(self, "Change Payout", "Enter new payout")
         if ok:
             self.payout = text
-            self.payout_number.setText(self.setPayoutText(text))
-            self.projector.payout_number.setText(self.setPayoutText(text))
+            self.payout_number.setText(setPayoutText(text))
+            self.projector.payout_number.setText(setPayoutText(text))
 
     def maxball_dialog(self):
         text, ok = QInputDialog.getText(self, "Change Max Ball", "Enter new maximum")
@@ -644,9 +641,9 @@ class MainWindow(QMainWindow):
             self.numbers_called.text().split("</span>")[0].split(">")[-1].split("/")[0]
         )
         if ok:
-            self.numbers_called.setText(self.getNumbersCalledText(called, text))
+            self.numbers_called.setText(getNumbersCalledText(called, text))
             self.projector.numbers_called.setText(
-                self.getNumbersCalledText(called, text)
+                getNumbersCalledText(called, text)
             )
 
     def confirm_back(self):
@@ -675,34 +672,15 @@ class MainWindow(QMainWindow):
 
         if len(self.called_numbers) >= 2:
             self.previous_num_label.setText(
-                self.setPreviousNumCalledText(self.called_numbers[-2])
+                setPreviousNumCalledText(self.called_numbers[-2])
             )
         else:
-            self.previous_num_label.setText(self.setPreviousNumCalledText("None"))
+            self.previous_num_label.setText(setPreviousNumCalledText("None"))
 
-        get_nums_called_text = self.getNumbersCalledText(
+        get_nums_called_text = getNumbersCalledText(
             len(self.called_numbers), self.max_ball
         )
         self.numbers_called.setText(get_nums_called_text)
-
-    def setPayoutText(self, txt):
-        return f'Payout<br><span style="color: blue; font-weight: bold;">{txt}</span>'
-
-    def getNumbersCalledText(self, curr, max=None):
-        show_max = ""
-        if max:
-            show_max = f"/{max}"
-        return f'Numbers Called<br><span style="color: blue; font-weight: bold;">{curr}{show_max}</span>'
-
-    def setPreviousNumCalledText(self, num):
-        return f'Previous Number<br><span style="color: blue; font-weight: bold; font-size: 16px;">{num}</span>'
-
-    def setGameNumberText(self, num, total=None):
-        show_total = ""
-        if total:
-            show_total = f" / {total}"
-        return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
-
 
 app = QApplication([])
 projector = MainWindow()

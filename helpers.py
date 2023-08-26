@@ -92,3 +92,21 @@ def mask_image(imgdata, imgtype="png", size=64):
 
         # return back the pixmap data
         return pm
+
+def setPayoutText(txt):
+    return f'Payout<br><span style="color: blue; font-weight: bold;">{txt}</span>'
+
+def getNumbersCalledText(curr, max=None):
+    show_max = ""
+    if max:
+        show_max = f"/{max}"
+    return f'Numbers Called<br><span style="color: blue; font-weight: bold;">{curr}{show_max}</span>'
+
+def setPreviousNumCalledText(num):
+    return f'Previous Number<br><span style="color: blue; font-weight: bold; font-size: 16px;">{num}</span>'
+
+def setGameNumberText(num, total=None):
+    show_total = ""
+    if total:
+        show_total = f" / {total}"
+    return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
