@@ -203,9 +203,6 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(widget)
 
-    def send_email(self):
-        print("email scott")
-
     def exit_app(self):
         sys.exit()
 
