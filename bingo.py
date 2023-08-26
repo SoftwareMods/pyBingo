@@ -4,6 +4,11 @@ from PyQt5.QtCore import *
 from helpers import *
 import sys
 
+# TODO: Create pattern maker
+# TODO: Rotate through game patterns
+# TODO: Fill out settings page
+# TODO: Save and apply settings 
+
 stylesheet = """
     MainWindow {
         background-image: url("images/background.png"); 
@@ -61,14 +66,14 @@ class MainWindow(QMainWindow):
         home_page.setContentsMargins(0, 0, 0, 0)
         home_page.setSpacing(0)
 
-        bingo_label = QLabel("BINGO")
-        bingo_label.setStyleSheet("font-size: 240px;")
+        bingo_label = QLabel("pyBINGO")
+        bingo_label.setStyleSheet("font-size: 120px;")
         bingo_label.setAlignment(Qt.AlignCenter)
         home_page.addWidget(bingo_label)
 
         button_grid = QGridLayout()
         # l, t, r, b
-        button_grid.setContentsMargins(100, 20, 100, 100)
+        button_grid.setContentsMargins(60, 0, 60, 60)
         button_grid.setSpacing(20)
 
         self.create_session_button = QPushButton("Create Session")
@@ -89,12 +94,17 @@ class MainWindow(QMainWindow):
         self.about_button = QPushButton("About")
         self.about_button.setMinimumHeight(50)
         self.about_button.clicked.connect(self.show_about)
-        button_grid.addWidget(self.about_button, 0, 3)
+        button_grid.addWidget(self.about_button, 1, 0)
+
+        self.settings_button = QPushButton("Settings")
+        self.settings_button.setMinimumHeight(50)
+        self.settings_button.clicked.connect(self.show_about)
+        button_grid.addWidget(self.settings_button, 1, 1)
 
         self.exit_button = QPushButton("Exit")
         self.exit_button.setMinimumHeight(50)
         self.exit_button.clicked.connect(self.exit_app)
-        button_grid.addWidget(self.exit_button, 0, 4)
+        button_grid.addWidget(self.exit_button, 1, 2)
 
         home_page.addLayout(button_grid)
 
@@ -639,7 +649,6 @@ class MainWindow(QMainWindow):
             self.change_max_button.clicked.connect(self.maxball_dialog)
             button_grid.addWidget(self.change_max_button, 0, 1)
 
-            # TODO: If last game, change next game to end session
             self.next_end_button = QPushButton("Next Game")
             self.next_end_button.setMinimumHeight(50)
             if game_number < total_games:
