@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         self.developer_info.setOpenExternalLinks(True)
         self.developer_info.setWordWrap(True)
         self.developer_info.setStyleSheet(
-            "background-color: lightgray; padding: 10px 80px;"
+            "background-color: lightgray; padding: 10px 60px;"
         )
         self.developer_info.setAlignment(Qt.AlignHCenter)
 
@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
         about_software_top = QHBoxLayout()
         software_name = "pyBingo"
         software_name_label = QLabel(software_name)
-        software_name_label.setStyleSheet("font-size: 80px;")
+        software_name_label.setStyleSheet("font-size: 60px;")
         software_name_label.setAlignment(Qt.AlignCenter)
         about_software_top.addWidget(software_name_label)
 
