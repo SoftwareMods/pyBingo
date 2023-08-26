@@ -659,9 +659,6 @@ class MainWindow(QMainWindow):
         if response == QMessageBox.Yes:
             self.showHomePage()
 
-    def resizeEvent(self, event):
-        pass
-
     def ball_clicked(self, num):
         if self.projector:
             self.projector.ball_clicked(num)
