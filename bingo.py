@@ -102,8 +102,158 @@ class MainWindow(QMainWindow):
         widget.setLayout(home_page)
         self.setCentralWidget(widget)
 
+    def mask_image(self, imgdata, imgtype="png", size=64):
+        # Load image
+        image = QImage.fromData(imgdata, imgtype)
+
+        # convert image to 32-bit ARGB (adds an alpha
+        # channel ie transparency factor):
+        image.convertToFormat(QImage.Format_ARGB32)
+
+        # Crop image to a square:
+        imgsize = min(image.width(), image.height())
+        rect = QRect(
+            int((image.width() - imgsize) / 2),
+            int((image.height() - imgsize) / 2),
+            imgsize,
+            imgsize,
+        )
+
+        image = image.copy(rect)
+
+        # Create the output image with the same dimensions
+        # and an alpha channel and make it completely transparent:
+        out_img = QImage(imgsize, imgsize, QImage.Format_ARGB32)
+        out_img.fill(Qt.transparent)
+
+        # Create a texture brush and paint a circle
+        # with the original image onto the output image:
+        brush = QBrush(image)
+
+        # Paint the output image
+        painter = QPainter(out_img)
+        painter.setBrush(brush)
+
+        # Don't draw an outline
+        painter.setPen(Qt.NoPen)
+
+        # drawing circle
+        painter.drawEllipse(0, 0, imgsize, imgsize)
+
+        # closing painter event
+        painter.end()
+
+        # Convert the image to a pixmap and rescale it.
+        pr = QWindow().devicePixelRatio()
+        pm = QPixmap.fromImage(out_img)
+        pm.setDevicePixelRatio(pr)
+        size *= pr
+        size = int(size)
+        pm = pm.scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+
+        # return back the pixmap data
+        return pm
+
     def show_about(self):
-        print("awwww, you care?")
+        self.setStyleSheet("")
+
+        container = QVBoxLayout()
+
+        about_page = QHBoxLayout()
+
+        about_developer = QVBoxLayout()
+        about_developer.setContentsMargins(0, 0, 0, 0)
+        # about_developer.setSpacing(0)
+
+        # image path
+        imgpath = "images/developer_scott_rowley.png"
+
+        # loading image
+        imgdata = open(imgpath, "rb").read()
+
+        # calling the function
+        pixmap = self.mask_image(imgdata, size=200)
+
+        # creating label
+        self.developer_img = QLabel("Image Label")
+        self.developer_img.setStyleSheet("background-color: lightgray;")
+
+        # putting image on label
+        self.developer_img.setPixmap(pixmap)
+
+        # moving the label
+        self.developer_img.setAlignment(Qt.AlignCenter)
+
+        # another label to put text
+        developer_name = "Scott Rowley"
+        name_styled = f'<span style="font-size: 32px;">{developer_name}</span>'
+        developer_bio = f"""{name_styled}<br><a href="mailto:scott.m.rowley@gmail.com?subject='Bingo Contact'">scott.m.rowley@gmail.com</a><br><br>
+        Scott first started programming with QBasic in 1993
+        and has since moved on to learn HTML, CSS, JavaScript/JQuery, SQL, PHP, BASH (Bourne-Again Shell), SAS, and Python.<br><br<br>
+        Use the email address above to suggest updates or to contact Scott for your development needs.
+        <br><br>View more of Scotts recent development work on <a href='http://github.com/SoftwareMods'>GitHub</a>"""
+        self.developer_info = QLabel(developer_bio, self)
+        self.developer_info.setOpenExternalLinks(True)
+        self.developer_info.setWordWrap(True)
+        self.developer_info.setStyleSheet(
+            "background-color: lightgray; padding: 10px 80px;"
+        )
+        self.developer_info.setAlignment(Qt.AlignHCenter)
+
+        about_developer.addWidget(self.developer_img)
+        about_developer.addWidget(self.developer_info)
+
+        about_software = QVBoxLayout()
+
+        about_software_top = QHBoxLayout()
+        software_name = "pyBingo"
+        software_name_label = QLabel(software_name)
+        software_name_label.setStyleSheet("font-size: 80px;")
+        software_name_label.setAlignment(Qt.AlignCenter)
+        about_software_top.addWidget(software_name_label)
+
+        about_software_bottom = QVBoxLayout()
+        software_title = "Software"
+        software_name_styled = f'<span style="font-size: 32px;">{software_title}</span>'
+        software_bio = f"""{software_name_styled}<br><br>
+        pyBingo: 1.0.0<br>
+        Windows 10 Pro: 19045.3324<br>
+        Visual Studio Code: 1.81.1<br>
+        Python: 3.11.4<br>
+        PyQt5: 5.15.9"""
+        self.software_info = QLabel(software_bio, self)
+        self.software_info.setWordWrap(True)
+        self.software_info.setStyleSheet("padding: 10px 80px;")
+        self.software_info.setAlignment(Qt.AlignHCenter)
+        about_software_bottom.addWidget(self.software_info)
+
+        buttons_grid = QGridLayout()
+        buttons_grid.setContentsMargins(0, 0, 0, 0)
+        buttons_grid.setSpacing(5)
+        buttons_grid.setAlignment(Qt.AlignRight)
+
+        self.cancel_button = QDialogButtonBox(QDialogButtonBox.Cancel)
+
+        # adding action when form is rejected
+        self.cancel_button.rejected.connect(self.showHomePage)
+
+        buttons_grid.addWidget(self.cancel_button, 0, 1)
+        about_software.addLayout(about_software_top)
+        about_software.addLayout(about_software_bottom)
+        
+
+        about_page.addLayout(about_developer)
+        about_page.addLayout(about_software)
+
+        container.addLayout(about_page)
+        container.addLayout(buttons_grid)
+        widget = QWidget()
+        widget.setLayout(container)
+
+        self.setCentralWidget(widget)
+
+    def send_email(self):
+        print("email scott")
 
     def exit_app(self):
         sys.exit()
@@ -316,6 +466,7 @@ class MainWindow(QMainWindow):
 
     def saveNewSession(self):
         found = False
+        saved = False
         sessions_list = loadJSONFromFile(sessions_file)
         session_name = self.nameLineEdit.text()
         num_games = int(self.numGamesSpinBar.text())
@@ -329,20 +480,24 @@ class MainWindow(QMainWindow):
                 break
 
         if not found:
+            id = getNewId(sessions_list)
             sessions_list.append(
-                {"name": session_name, "num_games": num_games, "games": []}
+                {"id": id, "name": session_name, "num_games": num_games, "games": []}
             )
             try:
                 saveJSONToFile(sessions_file, sessions_list)
                 msg.setWindowTitle("Session Saved")
                 msg.setText(f"New session '{session_name}' successfully saved")
                 msg.setIcon(QMessageBox.Information)
+                saved=True
             except Exception as e:
                 msg.setWindowTitle("Critical")
                 msg.setText(f"Failed to save session!")
                 msg.setInformativeText(f"{e}")
                 msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
+        if saved:
+            self.showHomePage()
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
         self.setStyleSheet("")
@@ -385,7 +540,7 @@ class MainWindow(QMainWindow):
         self.previous_num_label.setAlignment(Qt.AlignCenter)
         top_half_left.addWidget(self.previous_num_label, stretch=1)
 
-        # TODO: Replace this with animaged demo card
+        # TODO: Replace this with animated demo card
         top_half_left.addWidget(Color("#f0f0f0"), stretch=3)
 
         top_half_center = QVBoxLayout()
@@ -484,14 +639,23 @@ class MainWindow(QMainWindow):
             self.change_max_button.clicked.connect(self.maxball_dialog)
             button_grid.addWidget(self.change_max_button, 0, 1)
 
-            self.next_game_button = QPushButton("Next Game")
-            self.next_game_button.setMinimumHeight(50)
-            self.next_game_button.clicked.connect(
-                lambda session=self.session, game_index=game_index + 1: self.next_game(
-                    session, game_index
+            # TODO: If last game, change next game to end session
+            self.next_end_button = QPushButton("Next Game")
+            self.next_end_button.setMinimumHeight(50)
+            if game_number < total_games:
+                self.next_end_button.clicked.connect(
+                    lambda session=self.session, game_index=game_index + 1: self.next_game(
+                        session, game_index
+                    )
                 )
-            )
-            button_grid.addWidget(self.next_game_button, 0, 2)
+            else:
+                self.next_end_button.setText("End Session")
+                self.next_end_button.clicked.connect(
+                    lambda session=self.session, game_index=game_index + 1: self.next_game(
+                        session, game_index
+                    )
+                )
+            button_grid.addWidget(self.next_end_button, 0, 2)
 
             self.back_button = QPushButton("Back")
             self.back_button.setMinimumHeight(50)
