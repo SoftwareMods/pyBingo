@@ -6,6 +6,7 @@ import sys
 
 ball_cell_style = "font-size: 24px; padding: 4px 10px; background-color: white; color: gray; border: 1px solid gray;"
 
+
 class Color(QWidget):
     def __init__(self, color):
         super(Color, self).__init__()
@@ -42,9 +43,9 @@ class MainWindow(QMainWindow):
         else:
             self.showPlay()
 
-        title = settings['secondary_window_name']
+        title = settings["secondary_window_name"]
         if self.projector:  # if projector was passed then this one is the main page
-            title = settings['primary_window_name']
+            title = settings["primary_window_name"]
         self.setWindowTitle(title)
 
     def showHomePage(self):
@@ -119,30 +120,29 @@ class MainWindow(QMainWindow):
 
         # creating a group box
         self.settingsFormBox = QGroupBox("Settings")
-        self.settingsFormBox.setStyleSheet('font-size: 14px; font-weight: bold;')
-        regular_font = 'font-size: 11px; font-weight: normal;'
+        self.settingsFormBox.setStyleSheet("font-size: 14px; font-weight: bold;")
+        regular_font = "font-size: 11px; font-weight: normal;"
         # adding items to the combo box
-        self.primary_window_name = QLineEdit(settings['primary_window_name'])
+        self.primary_window_name = QLineEdit(settings["primary_window_name"])
         self.primary_window_name.setStyleSheet(regular_font)
-        self.secondary_window_name = QLineEdit(settings['secondary_window_name'])
+        self.secondary_window_name = QLineEdit(settings["secondary_window_name"])
         self.secondary_window_name.setStyleSheet(regular_font)
         # creating a form layout
         layout = QFormLayout()
-        
+
         background_button = QPushButton("Select")
         background_button.setStyleSheet(regular_font)
         background_button.clicked.connect(self.dialog)
-        self.home_page_background = QLineEdit(settings['background'])
+        self.home_page_background = QLineEdit(settings["background"])
         self.home_page_background.setStyleSheet(regular_font)
 
         # adding rows
         # for name and adding input text
-        titles_style = 'font-size: 12px; font-weight: bold;'
+        titles_style = "font-size: 12px; font-weight: bold;"
         name_titles = QLabel("Window names")
         name_titles.setStyleSheet(titles_style)
         layout.addRow(name_titles)
-        
-        
+
         self.primary_window_label = QLabel("Primary window")
         self.primary_window_label.setStyleSheet(regular_font)
         layout.addRow(self.primary_window_label, self.primary_window_name)
@@ -150,17 +150,19 @@ class MainWindow(QMainWindow):
         secondary_window_label = QLabel("Secondary window")
         secondary_window_label.setStyleSheet(regular_font)
         layout.addRow(secondary_window_label, self.secondary_window_name)
-        
+
         background_title = QLabel("Background")
         background_title.setStyleSheet(titles_style)
-        
+
         layout.addRow(background_title)
         layout.addRow(background_button, self.home_page_background)
         # creating a dialog button for ok and cancel
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
 
         # adding action when form is accepted
-        self.buttonBox.accepted.connect(lambda form=self.settingsFormBox: self.saveSettings(form))
+        self.buttonBox.accepted.connect(
+            lambda form=self.settingsFormBox: self.saveSettings(form)
+        )
 
         # adding action when form is rejected
         self.buttonBox.rejected.connect(self.showHomePage)
@@ -181,7 +183,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def dialog(self):
-        file , check = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()","", "All Files (*);;Python Files (*.py);;Text Files (*.txt)")
+        file, check = QFileDialog.getOpenFileName(
+            None,
+            "QFileDialog.getOpenFileName()",
+            "",
+            "All Files (*);;Python Files (*.py);;Text Files (*.txt)",
+        )
         if check:
             self.home_page_background.setText(file)
 
@@ -190,9 +197,9 @@ class MainWindow(QMainWindow):
         new_primary_name = self.primary_window_name.text()
         new_secondary_name = self.secondary_window_name.text()
         new_background_image = self.home_page_background.text()
-        settings['primary_window_name'] = new_primary_name
-        settings['secondary_window_name'] = new_secondary_name
-        settings['background'] = new_background_image
+        settings["primary_window_name"] = new_primary_name
+        settings["secondary_window_name"] = new_secondary_name
+        settings["background"] = new_background_image
         msg = QMessageBox()
         try:
             saveJSONToFile(settings_file, settings)
