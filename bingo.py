@@ -642,9 +642,7 @@ class MainWindow(QMainWindow):
         )
         if ok:
             self.numbers_called.setText(getNumbersCalledText(called, text))
-            self.projector.numbers_called.setText(
-                getNumbersCalledText(called, text)
-            )
+            self.projector.numbers_called.setText(getNumbersCalledText(called, text))
 
     def confirm_back(self):
         msg = QMessageBox()
@@ -681,6 +679,7 @@ class MainWindow(QMainWindow):
             len(self.called_numbers), self.max_ball
         )
         self.numbers_called.setText(get_nums_called_text)
+
 
 app = QApplication([])
 projector = MainWindow()
