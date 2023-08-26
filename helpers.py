@@ -111,3 +111,4 @@ def setGameNumberText(num, total=None):
     if total:
         show_total = f" / {total}"
     return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
+
