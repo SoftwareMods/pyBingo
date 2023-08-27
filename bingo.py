@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
     def __init__(self, projector=None):
         super(MainWindow, self).__init__()
 
-        settings = loadJSONFromFile(settings_file)
+        self.settings = loadJSONFromFile(settings_file)
 
         # Set minimum display size
         self.setMinimumSize(800, 600)
@@ -43,17 +43,17 @@ class MainWindow(QMainWindow):
         else:
             self.showPlay()
 
-        title = settings["secondary_window_name"]
+        title = self.settings["secondary_window_name"]
         if self.projector:  # if projector was passed then this one is the main page
-            title = settings["primary_window_name"]
+            title = self.settings["primary_window_name"]
         self.setWindowTitle(title)
 
     def showHomePage(self):
         # Allow for updating the background image without restart
-        settings = loadJSONFromFile(settings_file)
+        self.settings = loadJSONFromFile(settings_file)
         stylesheet = f"""
     MainWindow {{
-        background-image: url("{settings['background']}"); 
+        background-image: url("{self.settings['background']}"); 
         background-repeat: no-repeat; 
         background-position: center;
     }}
@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def show_settings(self):
-        settings = loadJSONFromFile(settings_file)
+        self.settings = loadJSONFromFile(settings_file)
         self.setStyleSheet("")
         settings_page = QVBoxLayout()
         settings_page.setContentsMargins(30, 30, 30, 30)
@@ -123,9 +123,9 @@ class MainWindow(QMainWindow):
         self.settingsFormBox.setStyleSheet("font-size: 14px; font-weight: bold;")
         regular_font = "font-size: 11px; font-weight: normal;"
         # adding items to the combo box
-        self.primary_window_name = QLineEdit(settings["primary_window_name"])
+        self.primary_window_name = QLineEdit(self.settings["primary_window_name"])
         self.primary_window_name.setStyleSheet(regular_font + 'padding-left: 2px;')
-        self.secondary_window_name = QLineEdit(settings["secondary_window_name"])
+        self.secondary_window_name = QLineEdit(self.settings["secondary_window_name"])
         self.secondary_window_name.setStyleSheet(regular_font + 'padding-left: 2px;')
         # creating a form layout
         layout = QFormLayout()
@@ -133,7 +133,7 @@ class MainWindow(QMainWindow):
         background_button = QPushButton("Select")
         background_button.setStyleSheet(regular_font)
         background_button.clicked.connect(self.background_image_dialog)
-        self.home_page_background = QLineEdit(settings["background"])
+        self.home_page_background = QLineEdit(self.settings["background"])
         self.home_page_background.setStyleSheet(regular_font + 'padding-left: 2px;')
 
         # adding rows
@@ -176,7 +176,7 @@ class MainWindow(QMainWindow):
         enable_logging_label = QLabel("Enable")
         enable_logging_label.setStyleSheet(regular_font)
         self.enable_logging_checkbox = QCheckBox()
-        if settings["logging"]:
+        if self.settings["logging"]:
             self.enable_logging_checkbox.setChecked(True)
         
         clear_logging_label = QLabel("Clear")
@@ -237,34 +237,37 @@ class MainWindow(QMainWindow):
             self.home_page_background.setText(file)
 
     def saveSettings(self, form):
-        settings = loadJSONFromFile(settings_file)
-        if settings["primary_window_name"] != self.primary_window_name.text():
-            log_activity(
-                "Changed primary window name from {} to {}".format(
-                    settings["primary_window_name"], self.primary_window_name.text()
+        self.settings = loadJSONFromFile(settings_file)
+        if self.settings["primary_window_name"] != self.primary_window_name.text():
+            if self.settings['logging']:
+                log_activity(
+                    "Changed primary window name from {} to {}".format(
+                        self.settings["primary_window_name"], self.primary_window_name.text()
+                    )
                 )
-            )
-            settings["primary_window_name"] = self.primary_window_name.text()
-        if settings["secondary_window_name"] != self.secondary_window_name.text():
-            log_activity(
-                "Changed secondary window name from {} to {}".format(
-                    settings["secondary_window_name"], self.secondary_window_name.text()
+            self.settings["primary_window_name"] = self.primary_window_name.text()
+        if self.settings["secondary_window_name"] != self.secondary_window_name.text():
+            if self.settings['logging']:
+                log_activity(
+                    "Changed secondary window name from {} to {}".format(
+                        self.settings["secondary_window_name"], self.secondary_window_name.text()
+                    )
                 )
-            )
-            settings["secondary_window_name"] = self.secondary_window_name.text()
-        if settings["background"] != self.home_page_background.text():
-            log_activity(
-                "Changed background image from {} to {}".format(
-                    settings["background"], self.home_page_background.text()
+            self.settings["secondary_window_name"] = self.secondary_window_name.text()
+        if self.settings["background"] != self.home_page_background.text():
+            if self.settings['logging']:
+                log_activity(
+                    "Changed background image from {} to {}".format(
+                        self.settings["background"], self.home_page_background.text()
+                    )
                 )
-            )
-            settings["background"] = self.home_page_background.text()
-        settings["logging"] = (
+            self.settings["background"] = self.home_page_background.text()
+        self.settings["logging"] = (
             True if self.enable_logging_checkbox.isChecked() else False
         )
         msg = QMessageBox()
         try:
-            saveJSONToFile(settings_file, settings)
+            saveJSONToFile(settings_file, self.settings)
             msg.setWindowTitle("Settings Saved")
             msg.setText(f"Settings successfully saved")
             msg.setIcon(QMessageBox.Information)
@@ -515,7 +518,8 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("Session Saved")
             msg.setText(f"Session '{new_session_name}' successfully saved")
             msg.setIcon(QMessageBox.Information)
-            log_activity(f"Updated session {new_session_name}")
+            if self.settings['logging']:
+                log_activity(f"Updated session {new_session_name}")
         except Exception as e:
             msg.setWindowTitle("Critical")
             msg.setText(f"Failed to save session!")
@@ -608,7 +612,8 @@ class MainWindow(QMainWindow):
                 msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
         if saved:
-            log_activity(f"Created new session {session_name}")
+            if self.settings['logging']:
+                log_activity(f"Created new session {session_name}")
             self.showHomePage()
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
@@ -641,7 +646,7 @@ class MainWindow(QMainWindow):
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
         self.called_numbers = []
 
-        if self.projector:
+        if self.projector and self.settings['logging']:
             log_activity(f'Started {self.session["name"]} game #{game_number}')
 
         main_div = QVBoxLayout()
@@ -788,7 +793,8 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Question)
         response = msg.exec_()
         if response == QMessageBox.Yes:
-            log_activity(f"Bingo claimed, payout {self.payout}, called balls: {self.called_numbers}")
+            if self.settings['logging']:
+                log_activity(f"Bingo claimed, payout {self.payout}, called balls: {self.called_numbers}")
             self.showPlay(
                 doCheck=False,
                 game_index=game_index,
@@ -820,7 +826,8 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Warning)
         response = msg.exec_()
         if response == QMessageBox.Yes:
-            log_activity(f'Abandoned session {self.session["name"]}')
+            if self.settings['logging']:
+                log_activity(f'Abandoned session {self.session["name"]}')
             self.showHomePage()
 
     def ball_clicked(self, num):
