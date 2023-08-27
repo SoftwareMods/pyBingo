@@ -280,6 +280,7 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         self.setStyleSheet("")
+        self.setContentsMargins(0,0,0,0)
 
         container = QVBoxLayout()
 
@@ -402,9 +403,10 @@ class MainWindow(QMainWindow):
     def select_session(self, showPlay=False, showDeletes=False):
         # First pop up a window to select which session
         self.setStyleSheet('')
-        window = QGroupBox("Edit Sessions")
         self.setContentsMargins(30,30,30,30)
-        
+        title = "Edit Sessions" if showDeletes else "Load Session"
+
+        window = QGroupBox(title)    
         self.listWidget = QListWidget()
 
         sessions = self.load_all_sessions()
@@ -437,9 +439,11 @@ class MainWindow(QMainWindow):
             self.listDeleteWidget.itemDoubleClicked.connect(self.delete_session)
 
         window_layout = QVBoxLayout(window)
-        update_label = QLabel("Update")
-        update_label.setStyleSheet('font-weight: bold;')
-        window_layout.addWidget(update_label)
+        if showDeletes:
+            update_label = QLabel("Update")
+            update_label.setStyleSheet('font-weight: bold;')
+            window_layout.addWidget(update_label)
+
         window_layout.addWidget(self.listWidget)
         
         if showDeletes:
@@ -582,7 +586,7 @@ class MainWindow(QMainWindow):
     def create_session(self):
         self.setStyleSheet("")
         create_session_page = QVBoxLayout()
-        create_session_page.setContentsMargins(30, 30, 30, 30)
+        self.setContentsMargins(30, 30, 30, 30)
 
         # creating a group box
         self.formGroupBox = QGroupBox("Create Session")
@@ -668,6 +672,7 @@ class MainWindow(QMainWindow):
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
         self.setStyleSheet("")
+        self.setContentsMargins(0,0,0,0)
         sessions = loadJSONFromFile(sessions_file)
         self.session = False
         self.payout = '0.00'
