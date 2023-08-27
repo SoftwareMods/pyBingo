@@ -124,9 +124,9 @@ class MainWindow(QMainWindow):
         regular_font = "font-size: 11px; font-weight: normal;"
         # adding items to the combo box
         self.primary_window_name = QLineEdit(settings["primary_window_name"])
-        self.primary_window_name.setStyleSheet(regular_font)
+        self.primary_window_name.setStyleSheet(regular_font + 'padding-left: 2px;')
         self.secondary_window_name = QLineEdit(settings["secondary_window_name"])
-        self.secondary_window_name.setStyleSheet(regular_font)
+        self.secondary_window_name.setStyleSheet(regular_font + 'padding-left: 2px;')
         # creating a form layout
         layout = QFormLayout()
 
@@ -134,7 +134,7 @@ class MainWindow(QMainWindow):
         background_button.setStyleSheet(regular_font)
         background_button.clicked.connect(self.background_image_dialog)
         self.home_page_background = QLineEdit(settings["background"])
-        self.home_page_background.setStyleSheet(regular_font)
+        self.home_page_background.setStyleSheet(regular_font + 'padding-left: 2px;')
 
         # adding rows
         # for name and adding input text
@@ -178,8 +178,25 @@ class MainWindow(QMainWindow):
         self.enable_logging_checkbox = QCheckBox()
         if settings["logging"]:
             self.enable_logging_checkbox.setChecked(True)
+        
+        clear_logging_label = QLabel("Clear")
+        clear_logging_label.setStyleSheet(regular_font)
+        self.clear_logging_button = QPushButton("Clear the log")
+        self.clear_logging_button.setStyleSheet(regular_font)
+        self.clear_logging_button.setMaximumWidth(100)
+        self.clear_logging_button.clicked.connect(self.clear_log)
+
+        log_view_label = QLabel("Logs")
+        log_view_label.setStyleSheet(regular_font)
+        self.log_view = QTextEdit()
+        self.log_view.setStyleSheet(regular_font)
+        self.log_view.setReadOnly(True)
+        self.log_view.setText(open(logging_file).read())
+
 
         layout.addRow(enable_logging_label, self.enable_logging_checkbox)
+        layout.addRow(clear_logging_label, self.clear_logging_button)
+        layout.addRow(log_view_label, self.log_view)
 
         # setting layout
         self.settingsFormBox.setLayout(layout)
@@ -193,6 +210,15 @@ class MainWindow(QMainWindow):
         widget = QWidget()
         widget.setLayout(settings_page)
         self.setCentralWidget(widget)
+
+    def clear_log(self):
+        with open(logging_file, 'w'): pass
+        msg = QMessageBox()
+        msg.setWindowTitle("Log cleared")
+        msg.setText(f"All past log entries removed")
+        msg.setIcon(QMessageBox.Information)
+        x = msg.exec_()
+        self.show_settings()
 
     def background_image_dialog(self):
         image_formats = [
@@ -213,19 +239,25 @@ class MainWindow(QMainWindow):
     def saveSettings(self, form):
         settings = loadJSONFromFile(settings_file)
         if settings["primary_window_name"] != self.primary_window_name.text():
-            log_activity("Changed primary window name from {} to {}".format(
-                settings["primary_window_name"], self.primary_window_name.text()
-            ))
+            log_activity(
+                "Changed primary window name from {} to {}".format(
+                    settings["primary_window_name"], self.primary_window_name.text()
+                )
+            )
             settings["primary_window_name"] = self.primary_window_name.text()
         if settings["secondary_window_name"] != self.secondary_window_name.text():
-            log_activity("Changed secondary window name from {} to {}".format(
-                settings["secondary_window_name"], self.secondary_window_name.text()
-            ))
+            log_activity(
+                "Changed secondary window name from {} to {}".format(
+                    settings["secondary_window_name"], self.secondary_window_name.text()
+                )
+            )
             settings["secondary_window_name"] = self.secondary_window_name.text()
         if settings["background"] != self.home_page_background.text():
-            log_activity("Changed background image from {} to {}".format(
-                settings["background"], self.home_page_background.text()
-            ))
+            log_activity(
+                "Changed background image from {} to {}".format(
+                    settings["background"], self.home_page_background.text()
+                )
+            )
             settings["background"] = self.home_page_background.text()
         settings["logging"] = (
             True if self.enable_logging_checkbox.isChecked() else False
@@ -756,7 +788,7 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Question)
         response = msg.exec_()
         if response == QMessageBox.Yes:
-            log_activity(f"Bingo claimed, called balls: {self.called_numbers}")
+            log_activity(f"Bingo claimed, payout {self.payout}, called balls: {self.called_numbers}")
             self.showPlay(
                 doCheck=False,
                 game_index=game_index,
