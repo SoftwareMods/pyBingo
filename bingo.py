@@ -71,36 +71,43 @@ class MainWindow(QMainWindow):
         home_page.addWidget(bingo_label)
 
         button_grid = QGridLayout()
+        button_style = 'font-size: 20px;'
         # l, t, r, b
-        button_grid.setContentsMargins(60, 0, 60, 60)
+        button_grid.setContentsMargins(60, 0, 60, 120)
         button_grid.setSpacing(20)
 
         self.create_session_button = QPushButton("Create Session")
+        self.create_session_button.setStyleSheet(button_style)
         self.create_session_button.setMinimumHeight(50)
         self.create_session_button.clicked.connect(self.create_session)
         button_grid.addWidget(self.create_session_button, 0, 0)
 
         self.edit_session_button = QPushButton("Edit Sessions")
+        self.edit_session_button.setStyleSheet(button_style)
         self.edit_session_button.setMinimumHeight(50)
         self.edit_session_button.clicked.connect(lambda show_deletes: self.select_session(showDeletes=True))
         button_grid.addWidget(self.edit_session_button, 0, 1)
 
         self.load_session_button = QPushButton("Load Session")
+        self.load_session_button.setStyleSheet(button_style)
         self.load_session_button.setMinimumHeight(50)
         self.load_session_button.clicked.connect(self.load_session)
         button_grid.addWidget(self.load_session_button, 0, 2)
 
         self.about_button = QPushButton("About")
+        self.about_button.setStyleSheet(button_style)
         self.about_button.setMinimumHeight(50)
         self.about_button.clicked.connect(self.show_about)
         button_grid.addWidget(self.about_button, 1, 0)
 
         self.settings_button = QPushButton("Settings")
+        self.settings_button.setStyleSheet(button_style)
         self.settings_button.setMinimumHeight(50)
         self.settings_button.clicked.connect(self.show_settings)
         button_grid.addWidget(self.settings_button, 1, 1)
 
         self.exit_button = QPushButton("Exit")
+        self.exit_button.setStyleSheet(button_style)
         self.exit_button.setMinimumHeight(50)
         self.exit_button.clicked.connect(self.exit_app)
         button_grid.addWidget(self.exit_button, 1, 2)
