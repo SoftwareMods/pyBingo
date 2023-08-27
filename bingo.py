@@ -82,7 +82,7 @@ class MainWindow(QMainWindow):
 
         self.edit_session_button = QPushButton("Edit Sessions")
         self.edit_session_button.setMinimumHeight(50)
-        self.edit_session_button.clicked.connect(self.select_session)
+        self.edit_session_button.clicked.connect(lambda show_deletes: self.select_session(showDeletes=True))
         button_grid.addWidget(self.edit_session_button, 0, 1)
 
         self.load_session_button = QPushButton("Load Session")
@@ -399,8 +399,9 @@ class MainWindow(QMainWindow):
         else:
             self.select_session(showPlay=True)
 
-    def select_session(self, showPlay=False):
+    def select_session(self, showPlay=False, showDeletes=False):
         # First pop up a window to select which session
+        self.setStyleSheet('')
         window = QWidget()
         self.listWidget = QListWidget()
 
@@ -419,8 +420,27 @@ class MainWindow(QMainWindow):
             self.listWidget.itemDoubleClicked.connect(
                 lambda doCheck=True: self.showPlay(doCheck)
             )
+
+        if showDeletes:
+            self.listDeleteWidget = QListWidget()
+            print('showing deletable')
+            for session in range(len(sessions)):
+                name = sessions[session]["name"]
+                if showPlay:
+                    if len(sessions[session]["games"]) == 0:
+                        continue
+                item = QListWidgetItem(name, self.listDeleteWidget)
+                self.listDeleteWidget.addItem(item)
+        if not showPlay:
+            self.listDeleteWidget.itemDoubleClicked.connect(self.delete_session)
+
         window_layout = QVBoxLayout(window)
+        window_layout.addWidget(QLabel("Update"))
         window_layout.addWidget(self.listWidget)
+        
+        if showDeletes:
+            window_layout.addWidget(QLabel("Delete"))
+            window_layout.addWidget(self.listDeleteWidget)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
 
         # adding action when form is rejected
@@ -431,6 +451,31 @@ class MainWindow(QMainWindow):
         window.setLayout(window_layout)
 
         self.setCentralWidget(window)
+
+    def delete_session(self):
+        session_name = self.listDeleteWidget.selectedItems()[0].text()
+        all_sessions = loadJSONFromFile(sessions_file)
+        for i in range(len(all_sessions)):
+            if all_sessions[i]['name'] == session_name:
+                del all_sessions[i]
+                break
+
+        msg = QMessageBox()
+        try:
+            saveJSONToFile(sessions_file, all_sessions)
+            msg.setWindowTitle(f"Deleted session '{session_name}'")
+            msg.setText(f"Session '{session_name}' successfully deleted")
+            msg.setIcon(QMessageBox.Information)
+            if self.settings['logging']:
+                log_activity(f"Deleted session {session_name}")
+        except Exception as e:
+            msg.setWindowTitle("Critical")
+            msg.setText(f"Failed to delete session!")
+            msg.setInformativeText(f"{e}")
+            msg.setIcon(QMessageBox.Critical)
+        x = msg.exec_()
+        self.select_session(showDeletes=True)
+        
 
     def edit_session(self):
         session_name = self.listWidget.selectedItems()[0].text()
@@ -620,7 +665,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet("")
         sessions = loadJSONFromFile(sessions_file)
         self.session = False
-        self.payout = 0.0
+        self.payout = '0.00'
         game_number = game_index + 1
         if doCheck:
             session_name = self.listWidget.selectedItems()[0].text()

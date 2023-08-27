@@ -97,6 +97,7 @@ def mask_image(imgdata, imgtype="png", size=64):
         return pm
 
 def setPayoutText(txt, log_it=True):
+    txt = "%0.2f" % float(txt)
     if log_it:
         log_activity(f'Changed payout to {txt}')
     return f'Payout<br><span style="color: blue; font-weight: bold;">{txt}</span>'
