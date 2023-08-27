@@ -1,1 +1,6 @@
-{"primary_window_name": "Bingo!", "secondary_window_name": "Let's play Bingo!!", "background": "C:/Programming/Python/Bingo/images/background.png", "logging": true}
+{
+    "primary_window_name": "Bingo!",
+    "secondary_window_name": "Let's play Bingo!",
+    "background": "C:/Programming/Python/Bingo/images/background.png",
+    "logging": true
+}
