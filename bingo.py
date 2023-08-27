@@ -71,10 +71,10 @@ class MainWindow(QMainWindow):
         home_page.addWidget(bingo_label)
 
         button_grid = QGridLayout()
-        button_style = 'font-size: 20px;'
+        button_style = 'font-size: 18px; padding: 30px 0;'
         # l, t, r, b
-        button_grid.setContentsMargins(60, 0, 60, 120)
-        button_grid.setSpacing(20)
+        button_grid.setContentsMargins(60, 0, 60, 80)
+        button_grid.setSpacing(10)
 
         self.create_session_button = QPushButton("Create Session")
         self.create_session_button.setStyleSheet(button_style)
@@ -85,20 +85,26 @@ class MainWindow(QMainWindow):
         self.edit_session_button = QPushButton("Edit Sessions")
         self.edit_session_button.setStyleSheet(button_style)
         self.edit_session_button.setMinimumHeight(50)
-        self.edit_session_button.clicked.connect(lambda show_deletes: self.select_session(showDeletes=True))
+        self.edit_session_button.clicked.connect(self.select_session)
         button_grid.addWidget(self.edit_session_button, 0, 1)
+
+        self.delete_session_button = QPushButton("Delete Session")
+        self.delete_session_button.setStyleSheet(button_style)
+        self.delete_session_button.setMinimumHeight(50)
+        self.delete_session_button.clicked.connect(self.delete_sessions)
+        button_grid.addWidget(self.delete_session_button, 0, 2)
 
         self.load_session_button = QPushButton("Load Session")
         self.load_session_button.setStyleSheet(button_style)
         self.load_session_button.setMinimumHeight(50)
         self.load_session_button.clicked.connect(self.load_session)
-        button_grid.addWidget(self.load_session_button, 0, 2)
+        button_grid.addWidget(self.load_session_button, 0, 3)
 
-        self.about_button = QPushButton("About")
-        self.about_button.setStyleSheet(button_style)
-        self.about_button.setMinimumHeight(50)
-        self.about_button.clicked.connect(self.show_about)
-        button_grid.addWidget(self.about_button, 1, 0)
+        self.game_types_button = QPushButton("Game Types")
+        self.game_types_button.setStyleSheet(button_style)
+        self.game_types_button.setMinimumHeight(50)
+        self.game_types_button.clicked.connect(self.show_game_types)
+        button_grid.addWidget(self.game_types_button, 1, 0)
 
         self.settings_button = QPushButton("Settings")
         self.settings_button.setStyleSheet(button_style)
@@ -106,11 +112,17 @@ class MainWindow(QMainWindow):
         self.settings_button.clicked.connect(self.show_settings)
         button_grid.addWidget(self.settings_button, 1, 1)
 
+        self.about_button = QPushButton("About")
+        self.about_button.setStyleSheet(button_style)
+        self.about_button.setMinimumHeight(50)
+        self.about_button.clicked.connect(self.show_about)
+        button_grid.addWidget(self.about_button, 1, 2)
+
         self.exit_button = QPushButton("Exit")
         self.exit_button.setStyleSheet(button_style)
         self.exit_button.setMinimumHeight(50)
         self.exit_button.clicked.connect(self.exit_app)
-        button_grid.addWidget(self.exit_button, 1, 2)
+        button_grid.addWidget(self.exit_button, 1, 3)
 
         home_page.addLayout(button_grid)
 
@@ -118,12 +130,48 @@ class MainWindow(QMainWindow):
         widget.setLayout(home_page)
         self.setCentralWidget(widget)
 
+    def delete_sessions(self, showPlay=False):
+        # First pop up a window to select which session
+        self.setStyleSheet('')
+        self.setContentsMargins(30,30,30,30)
+        title = "Delete Sessions"
+
+        window = QGroupBox(title)
+
+        sessions = self.load_all_sessions()
+        self.listDeleteWidget = QListWidget()
+        for session in range(len(sessions)):
+            name = sessions[session]["name"]
+            if showPlay:
+                if len(sessions[session]["games"]) == 0:
+                    continue
+            item = QListWidgetItem(name, self.listDeleteWidget)
+            self.listDeleteWidget.addItem(item)
+        if not showPlay:
+            self.listDeleteWidget.itemDoubleClicked.connect(self.delete_session)
+
+        window_layout = QVBoxLayout(window)
+        window_layout.addWidget(self.listDeleteWidget)
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
+
+        # adding action when form is rejected
+        self.buttonBox.rejected.connect(self.showHomePage)
+
+        # adding button box to the layout
+        window_layout.addWidget(self.buttonBox)
+        window.setLayout(window_layout)
+
+        self.setCentralWidget(window)
+
+    def show_game_types(self):
+        pass
+
     def show_settings(self):
         self.settings = loadJSONFromFile(settings_file)
         self.setStyleSheet("")
         settings_page = QVBoxLayout()
-        settings_page.setContentsMargins(30, 30, 30, 30)
-        settings_page.setSpacing(10)
+        settings_page.setContentsMargins(30, 30, 30, 10)
+        settings_page.setSpacing(0)
 
         # creating a group box
         self.settingsFormBox = QGroupBox("Settings")
@@ -199,7 +247,6 @@ class MainWindow(QMainWindow):
         self.log_view.setStyleSheet(regular_font)
         self.log_view.setReadOnly(True)
         self.log_view.setText(open(logging_file).read())
-
 
         layout.addRow(enable_logging_label, self.enable_logging_checkbox)
         layout.addRow(clear_logging_label, self.clear_logging_button)
@@ -411,7 +458,7 @@ class MainWindow(QMainWindow):
         # First pop up a window to select which session
         self.setStyleSheet('')
         self.setContentsMargins(30,30,30,30)
-        title = "Edit Sessions" if showDeletes else "Load Session"
+        title = "Edit Sessions" if not showPlay else "Load Session"
 
         window = QGroupBox(title)    
         self.listWidget = QListWidget()
@@ -432,32 +479,10 @@ class MainWindow(QMainWindow):
                 lambda doCheck=True: self.showPlay(doCheck)
             )
 
-        if showDeletes:
-            self.listDeleteWidget = QListWidget()
-            print('showing deletable')
-            for session in range(len(sessions)):
-                name = sessions[session]["name"]
-                if showPlay:
-                    if len(sessions[session]["games"]) == 0:
-                        continue
-                item = QListWidgetItem(name, self.listDeleteWidget)
-                self.listDeleteWidget.addItem(item)
-        if not showPlay:
-            self.listDeleteWidget.itemDoubleClicked.connect(self.delete_session)
-
         window_layout = QVBoxLayout(window)
-        if showDeletes:
-            update_label = QLabel("Update")
-            update_label.setStyleSheet('font-weight: bold;')
-            window_layout.addWidget(update_label)
 
         window_layout.addWidget(self.listWidget)
         
-        if showDeletes:
-            delete_label = QLabel("Delete")
-            delete_label.setStyleSheet('font-weight: bold; color: darkred;')
-            window_layout.addWidget(delete_label)
-            window_layout.addWidget(self.listDeleteWidget)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
 
         # adding action when form is rejected
