@@ -164,7 +164,92 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(window)
 
     def show_game_types(self):
-        pass
+        self.game_types = loadJSONFromFile(game_types_file)
+        self.setStyleSheet("")
+        game_types_page = QVBoxLayout()
+        game_types_page.setContentsMargins(30, 30, 30, 10)
+        game_types_page.setSpacing(0)
+        # creating a group box
+        self.gameTypesFormBox = QGroupBox("Game Types")
+        self.gameTypesFormBox.setStyleSheet("font-size: 14px; font-weight: bold;")
+        regular_font = "font-size: 11px; font-weight: normal;"
+        titles_style = "font-size: 12px; font-weight: bold;"
+
+        self.gt_layout = QFormLayout()
+
+        create_new_gt_button = QPushButton("Create New")
+        create_new_gt_button.setStyleSheet(regular_font)
+        create_new_gt_button.clicked.connect(self.save_new_game_type)
+
+        self.create_new_gt_textbox = QLineEdit()
+        self.create_new_gt_textbox.setMinimumWidth(600)
+        self.create_new_gt_textbox.setStyleSheet(regular_font)
+
+        add_patterns_label = QLabel("Modify game type patterns")
+        add_patterns_label.setStyleSheet(titles_style)
+        self.this_gt_combo = QComboBox()
+        self.this_gt_combo.setStyleSheet(regular_font)
+        self.this_gt_combo.addItem("-- Select game type --")
+        self.this_gt_combo.currentTextChanged.connect(self.load_gt_patterns)
+        for type in range(len(self.game_types)):
+            self.this_gt_combo.addItem(self.game_types[type]["name"])
+        
+        self.gt_layout.addRow(self.create_new_gt_textbox, create_new_gt_button)
+        self.gt_layout.addRow(add_patterns_label)
+        self.gt_layout.addRow(self.this_gt_combo)
+
+        self.selected_label = QLabel("")
+        self.gt_layout.addRow(self.selected_label)
+
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.rejected.connect(self.showHomePage)
+
+        self.gameTypesFormBox.setLayout(self.gt_layout)
+        game_types_page.addWidget(self.gameTypesFormBox)
+        game_types_page.addWidget(self.buttonBox)
+
+        widget = QWidget()
+        widget.setLayout(game_types_page)
+        self.setCentralWidget(widget)
+
+    def load_gt_patterns(self):
+        gt_selected_name = self.this_gt_combo.currentText()
+        if gt_selected_name != "-- Select game type --":
+            self.selected_label.setText(gt_selected_name) 
+
+    def save_new_game_type(self):
+        game_type_name = self.create_new_gt_textbox.text()
+        all_game_types = loadJSONFromFile(game_types_file)
+        msg = QMessageBox()
+        found = False
+        for i in range(len(all_game_types)):
+            if all_game_types[i]["name"] == game_type_name:
+                found = True
+                msg.setWindowTitle("Warning")
+                msg.setText(f"Game type '{game_type_name}' already exists!")
+                msg.setIcon(QMessageBox.Warning)
+                break
+        if not found:
+            id = getNewId(all_game_types)
+            all_game_types.append(
+                {"id": id, "name": game_type_name, "patterns": []}
+            )
+            try:
+                saveJSONToFile(game_types_file, all_game_types)
+                msg.setWindowTitle("Game Type Saved")
+                msg.setText(f"New game type '{game_type_name}' successfully saved")
+                msg.setIcon(QMessageBox.Information)
+                saved = True
+            except Exception as e:
+                msg.setWindowTitle("Critical")
+                msg.setText(f"Failed to save session!")
+                msg.setInformativeText(f"{e}")
+                msg.setIcon(QMessageBox.Critical)
+        x = msg.exec_()
+        if saved:
+            if self.settings['logging']:
+                log_activity(f"Created new game type {game_type_name}")
+
 
     def show_settings(self):
         self.settings = loadJSONFromFile(settings_file)
