@@ -402,7 +402,9 @@ class MainWindow(QMainWindow):
     def select_session(self, showPlay=False, showDeletes=False):
         # First pop up a window to select which session
         self.setStyleSheet('')
-        window = QWidget()
+        window = QGroupBox("Edit Sessions")
+        self.setContentsMargins(30,30,30,30)
+        
         self.listWidget = QListWidget()
 
         sessions = self.load_all_sessions()
@@ -435,11 +437,15 @@ class MainWindow(QMainWindow):
             self.listDeleteWidget.itemDoubleClicked.connect(self.delete_session)
 
         window_layout = QVBoxLayout(window)
-        window_layout.addWidget(QLabel("Update"))
+        update_label = QLabel("Update")
+        update_label.setStyleSheet('font-weight: bold;')
+        window_layout.addWidget(update_label)
         window_layout.addWidget(self.listWidget)
         
         if showDeletes:
-            window_layout.addWidget(QLabel("Delete"))
+            delete_label = QLabel("Delete")
+            delete_label.setStyleSheet('font-weight: bold; color: darkred;')
+            window_layout.addWidget(delete_label)
             window_layout.addWidget(self.listDeleteWidget)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
 
@@ -576,8 +582,7 @@ class MainWindow(QMainWindow):
     def create_session(self):
         self.setStyleSheet("")
         create_session_page = QVBoxLayout()
-        create_session_page.setContentsMargins(0, 0, 0, 0)
-        create_session_page.setSpacing(0)
+        create_session_page.setContentsMargins(30, 30, 30, 30)
 
         # creating a group box
         self.formGroupBox = QGroupBox("Create Session")
