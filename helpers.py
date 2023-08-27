@@ -1,12 +1,14 @@
+import json
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-import json
+from datetime import datetime
 from pathlib import Path
 
 sessions_file = 'data/sessions.json'
 game_types_file = 'data/game_types.json'
 settings_file = 'data/settings.json'
+logging_file = 'data/log.txt'
 
 def saveJSONToFile(json_file,json_obj):
     Path(json_file).write_text(json.dumps(json_obj))
@@ -94,7 +96,9 @@ def mask_image(imgdata, imgtype="png", size=64):
         # return back the pixmap data
         return pm
 
-def setPayoutText(txt):
+def setPayoutText(txt, log_it=True):
+    if log_it:
+        log_activity(f'Changed payout to {txt}')
     return f'Payout<br><span style="color: blue; font-weight: bold;">{txt}</span>'
 
 def getNumbersCalledText(curr, max=None):
@@ -111,4 +115,12 @@ def setGameNumberText(num, total=None):
     if total:
         show_total = f" / {total}"
     return f'Game Number<br><span style="color: blue; font-weight: bold;">{num}{show_total}</span>'
+
+def log_activity(text):
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+    log_str = f'[{date_time}] {text}'
+    with open(logging_file, 'a') as f:
+        f.write(log_str + '\n')
+
 

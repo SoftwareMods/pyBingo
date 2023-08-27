@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
 
         background_button = QPushButton("Select")
         background_button.setStyleSheet(regular_font)
-        background_button.clicked.connect(self.dialog)
+        background_button.clicked.connect(self.background_image_dialog)
         self.home_page_background = QLineEdit(settings["background"])
         self.home_page_background.setStyleSheet(regular_font)
 
@@ -169,6 +169,18 @@ class MainWindow(QMainWindow):
 
         layout.addRow(self.buttonBox)
 
+        logging_title = QLabel("Logging")
+        logging_title.setStyleSheet(titles_style)
+        layout.addRow(logging_title)
+
+        enable_logging_label = QLabel("Enable")
+        enable_logging_label.setStyleSheet(regular_font)
+        self.enable_logging_checkbox = QCheckBox()
+        if settings["logging"]:
+            self.enable_logging_checkbox.setChecked(True)
+
+        layout.addRow(enable_logging_label, self.enable_logging_checkbox)
+
         # setting layout
         self.settingsFormBox.setLayout(layout)
 
@@ -182,24 +194,42 @@ class MainWindow(QMainWindow):
         widget.setLayout(settings_page)
         self.setCentralWidget(widget)
 
-    def dialog(self):
+    def background_image_dialog(self):
+        image_formats = [
+            e.data().decode() for e in QImageReader.supportedImageFormats()
+        ]
+        image_str = "All Files (*);;"
+        for format in image_formats:
+            image_str += f"{format.upper()} Files (*.{format});;"
         file, check = QFileDialog.getOpenFileName(
             None,
             "QFileDialog.getOpenFileName()",
             "",
-            "All Files (*);;Python Files (*.py);;Text Files (*.txt)",
+            image_str,
         )
         if check:
             self.home_page_background.setText(file)
 
     def saveSettings(self, form):
         settings = loadJSONFromFile(settings_file)
-        new_primary_name = self.primary_window_name.text()
-        new_secondary_name = self.secondary_window_name.text()
-        new_background_image = self.home_page_background.text()
-        settings["primary_window_name"] = new_primary_name
-        settings["secondary_window_name"] = new_secondary_name
-        settings["background"] = new_background_image
+        if settings["primary_window_name"] != self.primary_window_name.text():
+            log_activity("Changed primary window name from {} to {}".format(
+                settings["primary_window_name"], self.primary_window_name.text()
+            ))
+            settings["primary_window_name"] = self.primary_window_name.text()
+        if settings["secondary_window_name"] != self.secondary_window_name.text():
+            log_activity("Changed secondary window name from {} to {}".format(
+                settings["secondary_window_name"], self.secondary_window_name.text()
+            ))
+            settings["secondary_window_name"] = self.secondary_window_name.text()
+        if settings["background"] != self.home_page_background.text():
+            log_activity("Changed background image from {} to {}".format(
+                settings["background"], self.home_page_background.text()
+            ))
+            settings["background"] = self.home_page_background.text()
+        settings["logging"] = (
+            True if self.enable_logging_checkbox.isChecked() else False
+        )
         msg = QMessageBox()
         try:
             saveJSONToFile(settings_file, settings)
@@ -417,7 +447,7 @@ class MainWindow(QMainWindow):
 
         # adding action when form is accepted
         self.buttonBox.accepted.connect(
-            lambda form=self.formGroupBox, id=selected_session["id"]: self.getForm(
+            lambda form=self.formGroupBox, id=selected_session["id"]: self.editSession(
                 form, id
             )
         )
@@ -432,7 +462,7 @@ class MainWindow(QMainWindow):
         widget.setLayout(self.edit_session_page)
         self.setCentralWidget(widget)
 
-    def getForm(self, form, id):
+    def editSession(self, form, id):
         game_types = []
         for widget in form.children():
             if isinstance(widget, QLineEdit):
@@ -453,6 +483,7 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("Session Saved")
             msg.setText(f"Session '{new_session_name}' successfully saved")
             msg.setIcon(QMessageBox.Information)
+            log_activity(f"Updated session {new_session_name}")
         except Exception as e:
             msg.setWindowTitle("Critical")
             msg.setText(f"Failed to save session!")
@@ -545,6 +576,7 @@ class MainWindow(QMainWindow):
                 msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
         if saved:
+            log_activity(f"Created new session {session_name}")
             self.showHomePage()
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
@@ -576,6 +608,9 @@ class MainWindow(QMainWindow):
 
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
         self.called_numbers = []
+
+        if self.projector:
+            log_activity(f'Started {self.session["name"]} game #{game_number}')
 
         main_div = QVBoxLayout()
         main_div.setContentsMargins(0, 0, 0, 0)
@@ -614,9 +649,9 @@ class MainWindow(QMainWindow):
         self.numbers_called.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.numbers_called, stretch=1)
 
-        self.payout_number = QLabel(setPayoutText(self.payout))
+        self.payout_number = QLabel(setPayoutText(self.payout, False))
         if self.session:
-            self.payout_number.setText(setPayoutText(self.payout))
+            self.payout_number.setText(setPayoutText(self.payout, False))
         self.payout_number.setStyleSheet("font-size: 12px;")
         self.payout_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.payout_number, stretch=1)
@@ -721,6 +756,7 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Question)
         response = msg.exec_()
         if response == QMessageBox.Yes:
+            log_activity(f"Bingo claimed, called balls: {self.called_numbers}")
             self.showPlay(
                 doCheck=False,
                 game_index=game_index,
@@ -733,7 +769,7 @@ class MainWindow(QMainWindow):
         if ok:
             self.payout = text
             self.payout_number.setText(setPayoutText(text))
-            self.projector.payout_number.setText(setPayoutText(text))
+            self.projector.payout_number.setText(setPayoutText(text, False))
 
     def maxball_dialog(self):
         text, ok = QInputDialog.getText(self, "Change Max Ball", "Enter new maximum")
@@ -752,6 +788,7 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Warning)
         response = msg.exec_()
         if response == QMessageBox.Yes:
+            log_activity(f'Abandoned session {self.session["name"]}')
             self.showHomePage()
 
     def ball_clicked(self, num):
