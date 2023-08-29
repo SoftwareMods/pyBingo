@@ -2,15 +2,16 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from helpers import *
+from bingo_card import Ui_Form
 import sys
 
 ball_cell_style = "font-size: 24px; padding: 4px 10px; background-color: white; color: gray; border: 1px solid gray;"
-
 
 class Color(QWidget):
     def __init__(self, color):
         super(Color, self).__init__()
         self.setAutoFillBackground(True)
+        self.setMinimumSize(6, 6)
         self.color = color
 
         palette = self.palette()
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
         home_page.addWidget(bingo_label)
 
         button_grid = QGridLayout()
-        button_style = 'font-size: 18px; padding: 30px 0;'
+        button_style = "font-size: 18px; padding: 30px 0;"
         # l, t, r, b
         button_grid.setContentsMargins(60, 0, 60, 80)
         button_grid.setSpacing(10)
@@ -132,8 +133,8 @@ class MainWindow(QMainWindow):
 
     def delete_sessions(self, showPlay=False):
         # First pop up a window to select which session
-        self.setStyleSheet('')
-        self.setContentsMargins(30,30,30,30)
+        self.setStyleSheet("")
+        self.setContentsMargins(30, 30, 30, 30)
         title = "Delete Sessions"
 
         window = QGroupBox(title)
@@ -163,7 +164,47 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(window)
 
-    def show_game_types(self):
+    def show_patterns(self, patterns):
+        # Delete anything already in the scroll
+        self.scroll.deleteLater()
+        self.pattern_widget = QWidget()
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignCenter)
+        self.pattern_boxes = {}
+        self.empty_grid_widget = QWidget()
+        self.empty_pattern_box = self.empty_grid_widget
+        self.empty_pattern_box.mouseReleaseEvent = lambda event, pattern=[]: self.modify_pattern(pattern)
+        blank_ui = Ui_Form()
+        blank_ui.setupUi(Form=self.empty_pattern_box, game_type_name=self.gt_selected_name, pattern=[])
+        self.empty_pattern_box.setMinimumSize(200,200)
+        self.empty_pattern_box.setMaximumSize(200,200)
+        layout.addWidget(self.empty_pattern_box)
+        for i in range(len(patterns)):
+            self.grid_widget = QWidget()
+            self.pattern_boxes[i] = self.grid_widget
+            self.pattern_boxes[i].mouseReleaseEvent = lambda event, pattern=patterns[i]: self.modify_pattern(pattern)
+            ui = Ui_Form()
+            ui.setupUi(Form=self.pattern_boxes[i], game_type_name=self.gt_selected_name, pattern=patterns[i])
+            self.pattern_boxes[i].setMinimumSize(200, 200)
+            self.pattern_boxes[i].setMaximumSize(200, 200)
+            layout.addWidget(self.pattern_boxes[i])
+
+        self.pattern_widget.setLayout(layout)
+        self.scroll = QScrollArea()
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setWidget(self.pattern_widget)
+        self.gt_layout.addRow(self.scroll)
+
+    def modify_pattern(self, pattern):
+        self.Form = QWidget()
+        ui = Ui_Form()
+        ui.setupUi(self.Form, game_type_name=self.gt_selected_name, pattern=pattern, readOnly=False, fn=self.show_game_types)
+        self.Form.show()
+
+    def show_game_types(self, game_type=False):
+        
         self.game_types = loadJSONFromFile(game_types_file)
         self.setStyleSheet("")
         game_types_page = QVBoxLayout()
@@ -183,17 +224,21 @@ class MainWindow(QMainWindow):
 
         self.create_new_gt_textbox = QLineEdit()
         self.create_new_gt_textbox.setMinimumWidth(600)
-        self.create_new_gt_textbox.setStyleSheet(regular_font)
+        self.create_new_gt_textbox.setStyleSheet(
+            regular_font + "margin-top: 2px; padding: 1px"
+        )
 
         add_patterns_label = QLabel("Modify game type patterns")
         add_patterns_label.setStyleSheet(titles_style)
         self.this_gt_combo = QComboBox()
         self.this_gt_combo.setStyleSheet(regular_font)
-        self.this_gt_combo.addItem("-- Select game type --")
-        self.this_gt_combo.currentTextChanged.connect(self.load_gt_patterns)
+        self.this_gt_combo.addItem("-- Select game type --") if not game_type else self.this_gt_combo.addItem(game_type)
+        self.this_gt_combo.currentTextChanged.connect(lambda game_type=game_type: self.load_gt_patterns(game_type))
         for type in range(len(self.game_types)):
-            self.this_gt_combo.addItem(self.game_types[type]["name"])
-        
+            if game_type and game_type != self.game_types[type]["name"]:
+                self.this_gt_combo.addItem(self.game_types[type]["name"])
+            elif not game_type:
+                self.this_gt_combo.addItem(self.game_types[type]["name"])
         self.gt_layout.addRow(self.create_new_gt_textbox, create_new_gt_button)
         self.gt_layout.addRow(add_patterns_label)
         self.gt_layout.addRow(self.this_gt_combo)
@@ -201,21 +246,43 @@ class MainWindow(QMainWindow):
         self.selected_label = QLabel("")
         self.gt_layout.addRow(self.selected_label)
 
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        # Start off with blank scroll area so we can view it and overwrite it
+        # when a new game type is selected
+        if not game_type:
+            self.pattern_widget = QWidget()
+            self.scroll = QScrollArea()
+            self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.scroll.setWidgetResizable(True)
+            self.scroll.setWidget(self.pattern_widget)
+            self.gt_layout.addRow(self.scroll)
+        else:
+            self.load_gt_patterns(game_type)
+
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.buttonBox.rejected.connect(self.showHomePage)
 
         self.gameTypesFormBox.setLayout(self.gt_layout)
         game_types_page.addWidget(self.gameTypesFormBox)
+
         game_types_page.addWidget(self.buttonBox)
 
         widget = QWidget()
         widget.setLayout(game_types_page)
         self.setCentralWidget(widget)
 
-    def load_gt_patterns(self):
-        gt_selected_name = self.this_gt_combo.currentText()
-        if gt_selected_name != "-- Select game type --":
-            self.selected_label.setText(gt_selected_name) 
+    def load_gt_patterns(self, game_type=False):
+        if not game_type:
+            self.gt_selected_name = self.this_gt_combo.currentText()
+        else:
+            self.gt_selected_name = game_type
+        if self.gt_selected_name != "-- Select game type --":
+            self.selected_label.setText(self.gt_selected_name)
+            patterns = None
+            for i in range(len(self.game_types)):
+                if self.game_types[i]["name"] == self.gt_selected_name:
+                    patterns = self.game_types[i]["patterns"]
+                    self.show_patterns(patterns)
 
     def save_new_game_type(self):
         game_type_name = self.create_new_gt_textbox.text()
@@ -231,9 +298,7 @@ class MainWindow(QMainWindow):
                 break
         if not found:
             id = getNewId(all_game_types)
-            all_game_types.append(
-                {"id": id, "name": game_type_name, "patterns": []}
-            )
+            all_game_types.append({"id": id, "name": game_type_name, "patterns": []})
             try:
                 saveJSONToFile(game_types_file, all_game_types)
                 msg.setWindowTitle("Game Type Saved")
@@ -247,9 +312,8 @@ class MainWindow(QMainWindow):
                 msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
         if saved:
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(f"Created new game type {game_type_name}")
-
 
     def show_settings(self):
         self.settings = loadJSONFromFile(settings_file)
@@ -264,9 +328,9 @@ class MainWindow(QMainWindow):
         regular_font = "font-size: 11px; font-weight: normal;"
         # adding items to the combo box
         self.primary_window_name = QLineEdit(self.settings["primary_window_name"])
-        self.primary_window_name.setStyleSheet(regular_font + 'padding-left: 2px;')
+        self.primary_window_name.setStyleSheet(regular_font + "padding-left: 2px;")
         self.secondary_window_name = QLineEdit(self.settings["secondary_window_name"])
-        self.secondary_window_name.setStyleSheet(regular_font + 'padding-left: 2px;')
+        self.secondary_window_name.setStyleSheet(regular_font + "padding-left: 2px;")
         # creating a form layout
         layout = QFormLayout()
 
@@ -274,7 +338,7 @@ class MainWindow(QMainWindow):
         background_button.setStyleSheet(regular_font)
         background_button.clicked.connect(self.background_image_dialog)
         self.home_page_background = QLineEdit(self.settings["background"])
-        self.home_page_background.setStyleSheet(regular_font + 'padding-left: 2px;')
+        self.home_page_background.setStyleSheet(regular_font + "padding-left: 2px;")
 
         # adding rows
         # for name and adding input text
@@ -318,7 +382,7 @@ class MainWindow(QMainWindow):
         self.enable_logging_checkbox = QCheckBox()
         if self.settings["logging"]:
             self.enable_logging_checkbox.setChecked(True)
-        
+
         clear_logging_label = QLabel("Clear")
         clear_logging_label.setStyleSheet(regular_font)
         self.clear_logging_button = QPushButton("Clear the log")
@@ -351,7 +415,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def clear_log(self):
-        with open(logging_file, 'w'): pass
+        with open(logging_file, "w"):
+            pass
         msg = QMessageBox()
         msg.setWindowTitle("Log cleared")
         msg.setText(f"All past log entries removed")
@@ -378,23 +443,25 @@ class MainWindow(QMainWindow):
     def saveSettings(self, form):
         self.settings = loadJSONFromFile(settings_file)
         if self.settings["primary_window_name"] != self.primary_window_name.text():
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(
                     "Changed primary window name from {} to {}".format(
-                        self.settings["primary_window_name"], self.primary_window_name.text()
+                        self.settings["primary_window_name"],
+                        self.primary_window_name.text(),
                     )
                 )
             self.settings["primary_window_name"] = self.primary_window_name.text()
         if self.settings["secondary_window_name"] != self.secondary_window_name.text():
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(
                     "Changed secondary window name from {} to {}".format(
-                        self.settings["secondary_window_name"], self.secondary_window_name.text()
+                        self.settings["secondary_window_name"],
+                        self.secondary_window_name.text(),
                     )
                 )
             self.settings["secondary_window_name"] = self.secondary_window_name.text()
         if self.settings["background"] != self.home_page_background.text():
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(
                     "Changed background image from {} to {}".format(
                         self.settings["background"], self.home_page_background.text()
@@ -419,7 +486,7 @@ class MainWindow(QMainWindow):
 
     def show_about(self):
         self.setStyleSheet("")
-        self.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(0, 0, 0, 0)
 
         container = QVBoxLayout()
 
@@ -541,11 +608,11 @@ class MainWindow(QMainWindow):
 
     def select_session(self, showPlay=False, showDeletes=False):
         # First pop up a window to select which session
-        self.setStyleSheet('')
-        self.setContentsMargins(30,30,30,30)
+        self.setStyleSheet("")
+        self.setContentsMargins(30, 30, 30, 30)
         title = "Edit Sessions" if not showPlay else "Load Session"
 
-        window = QGroupBox(title)    
+        window = QGroupBox(title)
         self.listWidget = QListWidget()
 
         sessions = self.load_all_sessions()
@@ -565,12 +632,9 @@ class MainWindow(QMainWindow):
             )
 
         window_layout = QVBoxLayout(window)
-
         window_layout.addWidget(self.listWidget)
-        
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
 
-        # adding action when form is rejected
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Cancel)
         self.buttonBox.rejected.connect(self.showHomePage)
 
         # adding button box to the layout
@@ -583,7 +647,7 @@ class MainWindow(QMainWindow):
         session_name = self.listDeleteWidget.selectedItems()[0].text()
         all_sessions = loadJSONFromFile(sessions_file)
         for i in range(len(all_sessions)):
-            if all_sessions[i]['name'] == session_name:
+            if all_sessions[i]["name"] == session_name:
                 del all_sessions[i]
                 break
 
@@ -593,7 +657,7 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle(f"Deleted session '{session_name}'")
             msg.setText(f"Session '{session_name}' successfully deleted")
             msg.setIcon(QMessageBox.Information)
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(f"Deleted session {session_name}")
         except Exception as e:
             msg.setWindowTitle("Critical")
@@ -602,7 +666,6 @@ class MainWindow(QMainWindow):
             msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
         self.select_session(showDeletes=True)
-        
 
     def edit_session(self):
         session_name = self.listWidget.selectedItems()[0].text()
@@ -690,7 +753,7 @@ class MainWindow(QMainWindow):
             msg.setWindowTitle("Session Saved")
             msg.setText(f"Session '{new_session_name}' successfully saved")
             msg.setIcon(QMessageBox.Information)
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(f"Updated session {new_session_name}")
         except Exception as e:
             msg.setWindowTitle("Critical")
@@ -783,16 +846,16 @@ class MainWindow(QMainWindow):
                 msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
         if saved:
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(f"Created new session {session_name}")
             self.showHomePage()
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
         self.setStyleSheet("")
-        self.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(0, 0, 0, 0)
         sessions = loadJSONFromFile(sessions_file)
         self.session = False
-        self.payout = '0.00'
+        self.payout = "0.00"
         game_number = game_index + 1
         if doCheck:
             session_name = self.listWidget.selectedItems()[0].text()
@@ -818,7 +881,7 @@ class MainWindow(QMainWindow):
         self.letters = {"0": "B", "1": "I", "2": "N", "3": "G", "4": "O"}
         self.called_numbers = []
 
-        if self.projector and self.settings['logging']:
+        if self.projector and self.settings["logging"]:
             log_activity(f'Started {self.session["name"]} game #{game_number}')
 
         main_div = QVBoxLayout()
@@ -965,8 +1028,10 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Question)
         response = msg.exec_()
         if response == QMessageBox.Yes:
-            if self.settings['logging']:
-                log_activity(f"Bingo claimed, payout {self.payout}, called balls: {self.called_numbers}")
+            if self.settings["logging"]:
+                log_activity(
+                    f"Bingo claimed, payout {self.payout}, called balls: {self.called_numbers}"
+                )
             self.showPlay(
                 doCheck=False,
                 game_index=game_index,
@@ -998,7 +1063,7 @@ class MainWindow(QMainWindow):
         msg.setIcon(QMessageBox.Warning)
         response = msg.exec_()
         if response == QMessageBox.Yes:
-            if self.settings['logging']:
+            if self.settings["logging"]:
                 log_activity(f'Abandoned session {self.session["name"]}')
             self.showHomePage()
 
@@ -1032,6 +1097,7 @@ class MainWindow(QMainWindow):
 app = QApplication([])
 projector = MainWindow()
 projector.show()
+projector.close()
 
 admin = MainWindow(projector)
 admin.show()
