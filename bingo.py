@@ -778,42 +778,19 @@ class MainWindow(QMainWindow):
         create_session_page = QVBoxLayout()
         self.setContentsMargins(30, 30, 30, 30)
 
-        # creating a group box
         self.formGroupBox = QGroupBox("Create Session")
-
-        # creating spin box to select age
         self.numGamesSpinBar = QSpinBox()
         self.numGamesSpinBar.setMinimum(1)
         self.numGamesSpinBar.setValue(16)
-
-        # adding items to the combo box
         self.nameLineEdit = QLineEdit()
-
-        # creating a form layout
         layout = QFormLayout()
-
-        # adding rows
-        # for name and adding input text
         layout.addRow(QLabel("Name"), self.nameLineEdit)
-
-        # for age and adding spin box
         layout.addRow(QLabel("Games"), self.numGamesSpinBar)
-
-        # setting layout
         self.formGroupBox.setLayout(layout)
-        # creating a dialog button for ok and cancel
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-
-        # adding action when form is accepted
         self.buttonBox.accepted.connect(self.saveNewSession)
-
-        # adding action when form is rejected
         self.buttonBox.rejected.connect(self.reject)
-
-        # adding form group box to the layout
         create_session_page.addWidget(self.formGroupBox)
-
-        # adding button box to the layout
         create_session_page.addWidget(self.buttonBox)
 
         widget = QWidget()
@@ -862,7 +839,8 @@ class MainWindow(QMainWindow):
             self.showHomePage()
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
-        # First maximize the screen and then set
+        
+        # First maximize the screen and then set size so resize isn't possible
         self.showMaximized()
         self.setFixedSize(app.primaryScreen().availableGeometry().size())
 
@@ -914,7 +892,6 @@ class MainWindow(QMainWindow):
 
         self.top_half_center = QVBoxLayout()
 
-        # top_half_center content
         self.game_type = QLabel("")
 
         if self.session:
@@ -932,7 +909,6 @@ class MainWindow(QMainWindow):
         if self.session:
             this_game_name = self.session["games"][game_index]
             game_types = loadJSONFromFile(game_types_file)
-            # self.current_patterns=False
             for i in range(len(game_types)):
                 if game_types[i]["name"] == this_game_name:
                     self.current_patterns = game_types[i]["patterns"]
@@ -1010,7 +986,6 @@ class MainWindow(QMainWindow):
 
         if self.projector:
             button_grid = QGridLayout()
-            # l, t, r, b
             button_grid.setContentsMargins(10, 5, 10, 10)
             button_grid.setSpacing(10)
 
@@ -1034,7 +1009,6 @@ class MainWindow(QMainWindow):
                 )
             else:
                 self.next_end_button.setText("End Session")
-                # For now, just go back to the home page.
                 self.next_end_button.clicked.connect(self.showHomePage)
                 # Stop rotations, we're done
                 self.picktimer.stop()
@@ -1160,7 +1134,6 @@ class MainWindow(QMainWindow):
 app = QApplication([])
 projector = MainWindow()
 projector.show()
-
 
 admin = MainWindow(projector)
 admin.show()
