@@ -499,18 +499,16 @@ class MainWindow(QMainWindow):
         self.settings["logging"] = (
             True if self.enable_logging_checkbox.isChecked() else False
         )
-        msg = QMessageBox()
+        
         try:
             saveJSONToFile(settings_file, self.settings)
-            msg.setWindowTitle("Settings Saved")
-            msg.setText(f"Settings successfully saved")
-            msg.setIcon(QMessageBox.Information)
         except Exception as e:
+            msg = QMessageBox()
             msg.setWindowTitle("Critical")
             msg.setText(f"Failed to save settings!")
             msg.setInformativeText(f"{e}")
             msg.setIcon(QMessageBox.Critical)
-        x = msg.exec_()
+            x = msg.exec_()
         self.showHomePage()
 
     def show_about(self):
@@ -518,32 +516,18 @@ class MainWindow(QMainWindow):
         self.setContentsMargins(0, 0, 0, 0)
 
         container = QVBoxLayout()
-
         about_page = QHBoxLayout()
-
         about_developer = QVBoxLayout()
         about_developer.setContentsMargins(0, 0, 0, 0)
 
-        # image path
         imgpath = "images/developer_scott_rowley.png"
-
-        # loading image
         imgdata = open(imgpath, "rb").read()
-
-        # calling the function
         pixmap = mask_image(imgdata, size=200)
-
-        # creating label
         self.developer_img = QLabel("Image Label")
         self.developer_img.setStyleSheet("background-color: lightgray;")
-
-        # putting image on label
         self.developer_img.setPixmap(pixmap)
-
-        # moving the label
         self.developer_img.setAlignment(Qt.AlignCenter)
 
-        # another label to put text
         developer_name = "Scott Rowley"
         name_styled = f'<span style="font-size: 32px;">{developer_name}</span>'
         developer_bio = f"""{name_styled}<br><a href="mailto:scott.m.rowley@gmail.com?subject='pyBingo Contact'">scott.m.rowley@gmail.com</a><br><br>
@@ -563,7 +547,6 @@ class MainWindow(QMainWindow):
         about_developer.addWidget(self.developer_info)
 
         about_software = QVBoxLayout()
-
         about_software_top = QHBoxLayout()
         software_name = "pyBingo"
         software_name_label = QLabel(software_name)
@@ -592,8 +575,6 @@ class MainWindow(QMainWindow):
         buttons_grid.setAlignment(Qt.AlignRight)
 
         self.cancel_button = QDialogButtonBox(QDialogButtonBox.Cancel)
-
-        # adding action when form is rejected
         self.cancel_button.rejected.connect(self.showHomePage)
 
         buttons_grid.addWidget(self.cancel_button, 0, 1)
@@ -1071,6 +1052,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
     def fill_pattern(self, game_type_name=None, pattern=[]):
+        # Remove and replace the existing that was already created so they don't stack
         QObjectCleanupHandler().add(self.pattern_container)
         self.pattern_container = QVBoxLayout()
         self.empty_grid_widget = QWidget()
