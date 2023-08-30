@@ -11,6 +11,7 @@ if hasattr(Qt, 'AA_UseHighDpiPixmaps'): QApplication.setAttribute(Qt.AA_UseHighD
 
 ball_cell_style = "font-size: 24px; padding: 4px 10px; background-color: white; color: gray; border: 1px solid gray;"
 
+
 class Color(QWidget):
     def __init__(self, color):
         super(Color, self).__init__()
@@ -179,18 +180,30 @@ class MainWindow(QMainWindow):
         layout.setAlignment(Qt.AlignCenter)
         self.pattern_boxes = {}
         self.empty_grid_widget = QWidget()
-        self.empty_grid_widget.mouseReleaseEvent = lambda event, pattern=[]: self.modify_pattern(pattern)
+        self.empty_grid_widget.mouseReleaseEvent = (
+            lambda event, pattern=[]: self.modify_pattern(pattern)
+        )
         blank_ui = Ui_Form()
-        blank_ui.setupUi(Form=self.empty_grid_widget, game_type_name=self.gt_selected_name, pattern=[])
-        self.empty_grid_widget.setMinimumSize(200,200)
-        self.empty_grid_widget.setMaximumSize(200,200)
+        blank_ui.setupUi(
+            Form=self.empty_grid_widget,
+            game_type_name=self.gt_selected_name,
+            pattern=[],
+        )
+        self.empty_grid_widget.setMinimumSize(200, 200)
+        self.empty_grid_widget.setMaximumSize(200, 200)
         layout.addWidget(self.empty_grid_widget)
         for i in range(len(patterns)):
             self.grid_widget = QWidget()
             self.pattern_boxes[i] = self.grid_widget
-            self.pattern_boxes[i].mouseReleaseEvent = lambda event, pattern=patterns[i]: self.modify_pattern(pattern)
+            self.pattern_boxes[i].mouseReleaseEvent = lambda event, pattern=patterns[
+                i
+            ]: self.modify_pattern(pattern)
             ui = Ui_Form()
-            ui.setupUi(Form=self.pattern_boxes[i], game_type_name=self.gt_selected_name, pattern=patterns[i])
+            ui.setupUi(
+                Form=self.pattern_boxes[i],
+                game_type_name=self.gt_selected_name,
+                pattern=patterns[i],
+            )
             self.pattern_boxes[i].setMinimumSize(200, 200)
             self.pattern_boxes[i].setMaximumSize(200, 200)
             layout.addWidget(self.pattern_boxes[i])
@@ -206,11 +219,16 @@ class MainWindow(QMainWindow):
     def modify_pattern(self, pattern):
         self.Form = QWidget()
         ui = Ui_Form()
-        ui.setupUi(self.Form, game_type_name=self.gt_selected_name, pattern=pattern, readOnly=False, fn=self.show_game_types)
+        ui.setupUi(
+            self.Form,
+            game_type_name=self.gt_selected_name,
+            pattern=pattern,
+            readOnly=False,
+            fn=self.show_game_types,
+        )
         self.Form.show()
 
     def show_game_types(self, game_type=False):
-        
         self.game_types = loadJSONFromFile(game_types_file)
         self.setStyleSheet("")
         game_types_page = QVBoxLayout()
@@ -238,8 +256,12 @@ class MainWindow(QMainWindow):
         add_patterns_label.setStyleSheet(titles_style)
         self.this_gt_combo = QComboBox()
         self.this_gt_combo.setStyleSheet(regular_font)
-        self.this_gt_combo.addItem("-- Select game type --") if not game_type else self.this_gt_combo.addItem(game_type)
-        self.this_gt_combo.currentTextChanged.connect(lambda game_type=game_type: self.load_gt_patterns(game_type))
+        self.this_gt_combo.addItem(
+            "-- Select game type --"
+        ) if not game_type else self.this_gt_combo.addItem(game_type)
+        self.this_gt_combo.currentTextChanged.connect(
+            lambda game_type=game_type: self.load_gt_patterns(game_type)
+        )
         for type in range(len(self.game_types)):
             if game_type and game_type != self.game_types[type]["name"]:
                 self.this_gt_combo.addItem(self.game_types[type]["name"])
@@ -489,6 +511,7 @@ class MainWindow(QMainWindow):
             msg.setInformativeText(f"{e}")
             msg.setIcon(QMessageBox.Critical)
         x = msg.exec_()
+        self.showHomePage()
 
     def show_about(self):
         self.setStyleSheet("")
@@ -859,10 +882,9 @@ class MainWindow(QMainWindow):
 
     def showPlay(self, doCheck=False, game_index=0, **kwargs):
         # First maximize the screen and then set
-        #self.setWindowFlags(Qt.WindowCloseButtonHint | Qt.WindowMinimizeButtonHint)
         self.showMaximized()
         self.setFixedSize(app.primaryScreen().availableGeometry().size())
-        
+
         self.setStyleSheet("")
         self.setContentsMargins(0, 0, 0, 0)
         sessions = loadJSONFromFile(sessions_file)
@@ -909,8 +931,6 @@ class MainWindow(QMainWindow):
         self.previous_num_label.setAlignment(Qt.AlignCenter)
         self.top_half_left.addWidget(self.previous_num_label, stretch=1)
 
-        
-
         self.top_half_center = QVBoxLayout()
 
         # top_half_center content
@@ -927,17 +947,17 @@ class MainWindow(QMainWindow):
         # and recreate
         self.pattern_container = QVBoxLayout()
 
-        self.current_patterns=[]
+        self.current_patterns = []
         if self.session:
-            this_game_name = self.session['games'][game_index]
+            this_game_name = self.session["games"][game_index]
             game_types = loadJSONFromFile(game_types_file)
             # self.current_patterns=False
             for i in range(len(game_types)):
-                if game_types[i]['name'] == this_game_name:
-                    self.current_patterns=game_types[i]['patterns']
-                    self.projector.current_patterns=self.current_patterns
+                if game_types[i]["name"] == this_game_name:
+                    self.current_patterns = game_types[i]["patterns"]
+                    self.projector.current_patterns = self.current_patterns
                     break
-        self.start_rotation()        
+        self.start_rotation()
 
         self.called_number = QLabel("")
         self.called_number.setStyleSheet("font-size: 120px")
@@ -1035,6 +1055,8 @@ class MainWindow(QMainWindow):
                 self.next_end_button.setText("End Session")
                 # For now, just go back to the home page.
                 self.next_end_button.clicked.connect(self.showHomePage)
+                # Stop rotations, we're done
+                self.picktimer.stop()
             button_grid.addWidget(self.next_end_button, 0, 2)
 
             self.back_button = QPushButton("Back")
@@ -1053,12 +1075,14 @@ class MainWindow(QMainWindow):
         self.pattern_container = QVBoxLayout()
         self.empty_grid_widget = QWidget()
         blank_ui = Ui_Form()
-        blank_ui.setupUi(Form=self.empty_grid_widget, game_type_name=game_type_name, pattern=pattern)
+        blank_ui.setupUi(
+            Form=self.empty_grid_widget, game_type_name=game_type_name, pattern=pattern
+        )
         self.pattern_container.addWidget(self.empty_grid_widget)
         if self.projector:
-            self.pattern_container.setContentsMargins(50,20,50,30)
+            self.pattern_container.setContentsMargins(50, 20, 50, 30)
         else:
-            self.pattern_container.setContentsMargins(50,20,50,60)
+            self.pattern_container.setContentsMargins(50, 20, 50, 60)
         self.top_half_left.addLayout(self.pattern_container, stretch=3)
 
     def start_rotation(self):
@@ -1066,15 +1090,14 @@ class MainWindow(QMainWindow):
         self.picktimer.setInterval(2000)
         self.picktimer.timeout.connect(self.rotate_patterns)
         self.picktimer.start()
-    
+
     def rotate_patterns(self):
-        if self.current_pattern_index < len(self.current_patterns) -1:
-            self.current_pattern_index+=1
+        if self.current_pattern_index < len(self.current_patterns) - 1:
+            self.current_pattern_index += 1
         else:
-            self.current_pattern_index=0
+            self.current_pattern_index = 0
         if len(self.current_patterns) > 0:
             self.fill_pattern(pattern=self.current_patterns[self.current_pattern_index])
-
 
     def next_game(self, session, game_index):
         # session variable is not used here but must be passed to save self.session
