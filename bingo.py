@@ -886,7 +886,7 @@ class MainWindow(QMainWindow):
         self.top_half = QHBoxLayout()
         self.top_half_left = QVBoxLayout()
         self.previous_num_label = QLabel(setPreviousNumCalledText("None"))
-        self.previous_num_label.setStyleSheet("font-size: 12px;")
+        self.previous_num_label.setStyleSheet("font-size: 20px;")
         self.previous_num_label.setAlignment(Qt.AlignCenter)
         self.top_half_left.addWidget(self.previous_num_label, stretch=1)
 
@@ -923,14 +923,14 @@ class MainWindow(QMainWindow):
 
         top_half_right = QVBoxLayout()
         self.numbers_called = QLabel(getNumbersCalledText(0, self.max_ball))
-        self.numbers_called.setStyleSheet("font-size: 12px;")
+        self.numbers_called.setStyleSheet("font-size: 20px;")
         self.numbers_called.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.numbers_called, stretch=1)
 
         self.payout_number = QLabel(setPayoutText(self.payout, False))
         if self.session:
             self.payout_number.setText(setPayoutText(self.payout, False))
-        self.payout_number.setStyleSheet("font-size: 12px;")
+        self.payout_number.setStyleSheet("font-size: 20px;")
         self.payout_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.payout_number, stretch=1)
 
@@ -941,7 +941,7 @@ class MainWindow(QMainWindow):
             self.projector.game_number.setText(
                 setGameNumberText(game_number, total_games)
             )
-        self.game_number.setStyleSheet("font-size: 12px;")
+        self.game_number.setStyleSheet("font-size: 20px;")
         self.game_number.setAlignment(Qt.AlignCenter)
         top_half_right.addWidget(self.game_number, stretch=1)
 
